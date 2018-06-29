@@ -1,7 +1,6 @@
 package main
 
 import (
-	"runtime"
 	"sync"
 	"net/http"
 	"fmt"
@@ -40,7 +39,7 @@ func (responseBody *anonymousClientResponseBody) getJsonResponseBodyStringRepres
 	return response
 }
 
-func (responseBody certainClientResponseBody) getJsonResponseBodyStringRepresentation() string {
+func (responseBody *certainClientResponseBody) getJsonResponseBodyStringRepresentation() string {
 	jsonBody, _ := json.Marshal(responseBody)
 
 	response := string(jsonBody)
@@ -110,8 +109,6 @@ func startAnonymousTestClient(currentClientNumber int, wg *sync.WaitGroup) {
 			fmt.Printf("[Goroutine %d][Message %d] Got valid response\n", currentMessageNumber, currentClientNumber)
 		}
 	}
-
-	runtime.Gosched()
 }
 
 func startWarmUpClient(currentClientNumber int, wg *sync.WaitGroup) {
@@ -126,8 +123,6 @@ func startWarmUpClient(currentClientNumber int, wg *sync.WaitGroup) {
 
 		fmt.Println("Message", currentMessageNumber, "was sent from goroutine", currentClientNumber)
 	}
-
-	runtime.Gosched()
 }
 
 func main() {
