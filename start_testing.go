@@ -31,20 +31,9 @@ type certainClientResponseBody struct {
 	Items    []good `json:"items"`
 }
 
-func (responseBody *anonymousClientResponseBody) getJsonResponseBodyStringRepresentation() string {
-	jsonBody, _ := json.Marshal(responseBody)
-
-	response := string(jsonBody)
-
-	return response
-}
-
-func (responseBody *certainClientResponseBody) getJsonResponseBodyStringRepresentation() string {
-	jsonBody, _ := json.Marshal(responseBody)
-
-	response := string(jsonBody)
-
-	return response
+type ResponseBody struct {
+	Nickname string `json:"nickname"`
+	Items    []good `json:"items"`
 }
 
 func getExpectedBodyAnonymousClient() string {
@@ -72,20 +61,65 @@ func getExpectedBodyAnonymousClient() string {
 	return response
 }
 
-func checkAnonymousClientResponse(response *http.Response) error {
+func getExpectedResponseBody(userName string) string {
+	const defaultGoodsNumber int = 5
+	var multiplier int
+
+	responseBody := &ResponseBody{}
+
+	if userName != "" {
+		goods := make([]good, len(userName))
+
+		responseBody.Nickname = userName
+		for _, charValue := range userName {
+			multiplier += int(charValue)
+		}
+
+		for currentGoodNumber := 0; currentGoodNumber < len(goods); currentGoodNumber++ {
+			newGood := good{}
+			newGood.Name = userName + strconv.Itoa(currentGoodNumber)
+			newGood.Price = strconv.Itoa((currentGoodNumber + 1) * multiplier)
+
+			goods[currentGoodNumber] = newGood
+		}
+
+		responseBody.Items = goods
+
+	} else {
+		goods := make([]good, defaultGoodsNumber)
+
+		for currentGoodNumber := 0; currentGoodNumber < len(goods); currentGoodNumber++ {
+			newGood := good{}
+			newGood.Name = "default" + strconv.Itoa(currentGoodNumber)
+			newGood.Price = strconv.Itoa(currentGoodNumber * multiplier)
+
+			goods[currentGoodNumber] = newGood
+		}
+
+		responseBody.Items = goods
+	}
+
+	jsonBody, _ := json.Marshal(responseBody)
+
+	response := string(jsonBody)
+
+	return response
+}
+
+func checkClientResponse(response *http.Response) error {
 	expectedBody := getExpectedBodyAnonymousClient()
 
-	responseByteBody, err := ioutil.ReadAll(response.Body)
+	receivedResponseByteBody, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		panic(err)
 	}
-	var body string = string(responseByteBody)
+	var convertedReceivedResponseBody = string(receivedResponseByteBody)
 
 	if response.StatusCode != 200 {
 		return errors.New("wrong status code")
 	}
 
-	if body != expectedBody {
+	if convertedReceivedResponseBody != expectedBody {
 		return errors.New("wrong response body")
 	}
 
@@ -101,9 +135,9 @@ func startAnonymousTestClient(currentClientNumber int, wg *sync.WaitGroup) {
 			panic(err)
 		}
 
-		fmt.Printf("[Goroutine %d] Message %d was syccesfully sent", currentClientNumber, currentMessageNumber)
+		fmt.Printf("[Goroutine %d] Message %d was successfully sent", currentClientNumber, currentMessageNumber)
 
-		if resultCheck := checkAnonymousClientResponse(response); resultCheck != nil {
+		if resultCheck := checkClientResponse(response); resultCheck != nil {
 			fmt.Printf("[Goroutine %d][Message %d] Got invalid response. Error Message: %s\n", currentMessageNumber, currentClientNumber, resultCheck)
 		} else {
 			fmt.Printf("[Goroutine %d][Message %d] Got valid response\n", currentMessageNumber, currentClientNumber)
