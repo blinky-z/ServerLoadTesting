@@ -161,6 +161,8 @@ func main() {
 
 	wgTest := &sync.WaitGroup{}
 
+	startTestingTime := time.Now()
+
 	// create clients for web server load testing
 	for currentClientNumber := 0; currentClientNumber < testClientsNum; currentClientNumber++ {
 		wgTest.Add(1)
@@ -173,5 +175,8 @@ func main() {
 
 	wgTest.Wait()
 
-	logInfo.Println("[MAIN] All tests are passed")
+	endTestingTime := time.Now()
+	elapsed := endTestingTime.Sub(startTestingTime)
+
+	logInfo.Printf("[MAIN] All tests are passed. Elapsed time: %f seconds", elapsed.Seconds())
 }
