@@ -178,5 +178,5 @@ func main() {
 	endTestingTime := time.Now()
 	elapsed := endTestingTime.Sub(startTestingTime)
 
-	logInfo.Printf("[MAIN] All tests are passed. Elapsed time: %f seconds", elapsed.Seconds())
+	logInfo.Printf("[MAIN] All tests are passed. Elapsed time: %v seconds", elapsed.Seconds())
 }
