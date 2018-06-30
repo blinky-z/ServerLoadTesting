@@ -37,12 +37,12 @@ type item struct {
 	Price string `json:"price"`
 }
 
-func getExpectedResponseBody(userName string) string {
+func getExpectedGetItemsResponseBody(userName string) string {
 	const defaultGoodsNumber int = 5
 
 	responseBody := map[string]interface{}{}
 
-	if userName != "" { // in case of username was passed
+	if userName != "" {
 		var multiplier int = 0
 
 		items := make([]item, len(userName))
@@ -62,7 +62,7 @@ func getExpectedResponseBody(userName string) string {
 
 		responseBody["items"] = items
 
-	} else { // default case (anonymous client)
+	} else {
 		var multiplier int = 30
 
 		items := make([]item, defaultGoodsNumber)
@@ -83,7 +83,7 @@ func getExpectedResponseBody(userName string) string {
 }
 
 func checkClientResponse(userName string, response *http.Response) error {
-	expectedBody := getExpectedResponseBody(userName)
+	expectedBody := getExpectedGetItemsResponseBody(userName)
 
 	defer response.Body.Close()
 	receivedResponseBody, err := ioutil.ReadAll(response.Body)
