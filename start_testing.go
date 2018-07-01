@@ -11,14 +11,19 @@ import (
 	"log"
 	"io"
 	"os"
+	"errors"
+	"sync/atomic"
 )
 
 var (
 	logInfo  *log.Logger
 	logError *log.Logger
+
+	getItemsErrorCount uint32 = 0
+	buyItemsErrorCount uint32 = 0
 )
 
-func InitLoggers(infoHandle io.Writer, errorHandle io.Writer) {
+func Init(infoHandle io.Writer, errorHandle io.Writer) {
 	logInfo = log.New(infoHandle, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	logError = log.New(errorHandle, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
@@ -29,34 +34,6 @@ const (
 	testClientsNum   = 10
 	testMessagesNum  = 10
 )
-
-type ErrWrongGetItemsResponse struct {
-	message string
-}
-
-func NewErrWrongGetItemsResponse(message string) *ErrWrongGetItemsResponse {
-	return &ErrWrongGetItemsResponse{
-		message: message,
-	}
-}
-
-func (e *ErrWrongGetItemsResponse) Error() string {
-	return e.message
-}
-
-type ErrWrongBuyItemResponse struct {
-	message string
-}
-
-func NewErrWrongBuyItemResponse(message string) *ErrWrongBuyItemResponse {
-	return &ErrWrongBuyItemResponse{
-		message: message,
-	}
-}
-
-func (e *ErrWrongBuyItemResponse) Error() string {
-	return e.message
-}
 
 type Item struct {
 	Name  string `json:"name"`
@@ -124,15 +101,15 @@ func getExpectedBuyItemResponseBody(itemName string) string {
 	return string(jsonBody)
 }
 
-func checkBuyItemResponse(requestedItemName, response string, responseStatusCode int) error {
+func checkBuyItemResponse(requestedItemName, response string, statusCode int) error {
 	expectedResponse := getExpectedBuyItemResponseBody(requestedItemName)
 
-	if responseStatusCode != 200 {
-		return NewErrWrongBuyItemResponse("Wrong Status Code")
+	if statusCode != 200 {
+		return errors.New("wrong Status Code")
 	}
 
 	if response != expectedResponse {
-		return NewErrWrongBuyItemResponse("wrong response body")
+		return errors.New("wrong response body")
 	}
 
 	return nil
@@ -142,11 +119,11 @@ func checkGetItemsResponse(userName, response string, statusCode int) error {
 	expectedResponse := getExpectedGetItemsResponseBody(userName)
 
 	if statusCode != 200 {
-		return NewErrWrongGetItemsResponse("Wrong Status Code")
+		return errors.New("wrong status code")
 	}
 
 	if response != expectedResponse {
-		return NewErrWrongGetItemsResponse("Wrong response body")
+		return errors.New("wrong response body")
 	}
 
 	return nil
@@ -186,18 +163,18 @@ func startTestClient(path, queryParam, body string, currentClientNumber int, wg 
 
 		logInfo.Printf("[Goroutine %d] Message %d was successfully sent\n", currentClientNumber, currentMessageNumber)
 
-		if resultCheck := checkGetItemsResponse("", string(responseBytes), response.StatusCode); resultCheck.(type) != nil {
+		if resultCheck := checkGetItemsResponse("", string(responseBytes), response.StatusCode); resultCheck != nil {
 			logError.Printf("[Goroutine %d][Message %d][Get Items Test] Got invalid response. Error Message: %s\n", currentClientNumber, currentMessageNumber, resultCheck)
+			atomic.AddUint32(&getItemsErrorCount, 1)
 		} else {
 			logInfo.Printf("[Goroutine %d][Message %d][Get Items Test] Got valid response\n", currentClientNumber, currentMessageNumber)
 
 			var responseBody = ResponseBody{}
-
 			json.Unmarshal(responseBytes, responseBody)
 
 			items := responseBody.Items
 
-			for _, currentItem := range items {
+			for index, currentItem := range items {
 				requestBody, _ := json.Marshal(currentItem)
 
 				response, _ := sendRequest("/buy", queryParam, string(requestBody))
@@ -205,9 +182,10 @@ func startTestClient(path, queryParam, body string, currentClientNumber int, wg 
 				responseBytes, _ := ioutil.ReadAll(response.Body)
 
 				if resultCheck := checkBuyItemResponse(currentItem.Name, string(responseBytes), response.StatusCode); resultCheck != nil {
-					logError.Printf("[Goroutine %d][Message %d][Buy Items Test] Got invalid response. Error Message: %s\n", currentClientNumber, currentMessageNumber, resultCheck)
+					logError.Printf("[Goroutine %d][Message %d][Buy Items Test] Got invalid response. Error Message: %s\n", currentClientNumber, index, resultCheck)
+					atomic.AddUint32(&buyItemsErrorCount, 1)
 				} else {
-					logInfo.Printf("[Goroutine %d][Message %d][Buy Items Test] Got valid response\n", currentClientNumber, currentMessageNumber)
+					logInfo.Printf("[Goroutine %d][Message %d][Buy Items Test] Got valid response\n", currentClientNumber, index)
 				}
 			}
 		}
@@ -215,7 +193,7 @@ func startTestClient(path, queryParam, body string, currentClientNumber int, wg 
 }
 
 func main() {
-	InitLoggers(os.Stdout, os.Stderr)
+	Init(os.Stdout, os.Stderr)
 
 	wgWarmUp := &sync.WaitGroup{}
 
