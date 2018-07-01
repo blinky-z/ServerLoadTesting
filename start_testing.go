@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"time"
 	"bytes"
@@ -21,7 +20,6 @@ var (
 
 func InitLoggers(infoHandle io.Writer, errorHandle io.Writer) {
 	logInfo = log.New(infoHandle, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
-	logInfo.Output(0, "adasd")
 
 	logError = log.New(errorHandle, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 }
@@ -32,7 +30,35 @@ const (
 	testMessagesNum  = 10
 )
 
-type item struct {
+type ErrWrongGetItemsResponse struct {
+	message string
+}
+
+func NewErrWrongGetItemsResponse(message string) *ErrWrongGetItemsResponse {
+	return &ErrWrongGetItemsResponse{
+		message: message,
+	}
+}
+
+func (e *ErrWrongGetItemsResponse) Error() string {
+	return e.message
+}
+
+type ErrWrongBuyItemResponse struct {
+	message string
+}
+
+func NewErrWrongBuyItemResponse(message string) *ErrWrongBuyItemResponse {
+	return &ErrWrongBuyItemResponse{
+		message: message,
+	}
+}
+
+func (e *ErrWrongBuyItemResponse) Error() string {
+	return e.message
+}
+
+type Item struct {
 	Name  string `json:"name"`
 	Price string `json:"price"`
 }
@@ -45,7 +71,7 @@ func getExpectedGetItemsResponseBody(userName string) string {
 	if userName != "" {
 		var multiplier int = 0
 
-		items := make([]item, len(userName))
+		items := make([]Item, len(userName))
 
 		responseBody["nickname"] = userName
 		for _, charValue := range userName {
@@ -53,7 +79,7 @@ func getExpectedGetItemsResponseBody(userName string) string {
 		}
 
 		for currentItemNumber := 0; currentItemNumber < len(items); currentItemNumber++ {
-			newItem := item{}
+			newItem := Item{}
 			newItem.Name = userName + strconv.Itoa(currentItemNumber)
 			newItem.Price = strconv.Itoa((currentItemNumber + 1) * multiplier)
 
@@ -65,10 +91,10 @@ func getExpectedGetItemsResponseBody(userName string) string {
 	} else {
 		var multiplier int = 30
 
-		items := make([]item, defaultGoodsNumber)
+		items := make([]Item, defaultGoodsNumber)
 
 		for currentItemNumber := 0; currentItemNumber < len(items); currentItemNumber++ {
-			newItem := item{}
+			newItem := Item{}
 			newItem.Name = "default" + strconv.Itoa(currentItemNumber)
 			newItem.Price = strconv.Itoa(currentItemNumber * multiplier)
 
@@ -82,21 +108,45 @@ func getExpectedGetItemsResponseBody(userName string) string {
 	return string(jsonBody)
 }
 
-func checkClientResponse(userName string, response *http.Response) error {
-	expectedBody := getExpectedGetItemsResponseBody(userName)
+func getExpectedBuyItemResponseBody(itemName string) string {
+	responseBody := map[string]interface{}{}
 
-	defer response.Body.Close()
-	receivedResponseBody, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
+	successPurchaseMessage := "success"
+	failurePurchaseMessage := "failure"
+
+	if len(itemName) % 2 == 0 {
+		responseBody["result"] = successPurchaseMessage
+	} else {
+		responseBody["result"] = failurePurchaseMessage
 	}
 
-	if response.StatusCode != 200 {
-		return errors.New("wrong status code")
+	jsonBody, _ := json.Marshal(responseBody)
+	return string(jsonBody)
+}
+
+func checkBuyItemResponse(requestedItemName, response string, responseStatusCode int) error {
+	expectedResponse := getExpectedBuyItemResponseBody(requestedItemName)
+
+	if responseStatusCode != 200 {
+		return NewErrWrongBuyItemResponse("Wrong Status Code")
 	}
 
-	if string(receivedResponseBody) != expectedBody {
-		return errors.New("wrong response body")
+	if response != expectedResponse {
+		return NewErrWrongBuyItemResponse("wrong response body")
+	}
+
+	return nil
+}
+
+func checkGetItemsResponse(userName, response string, statusCode int) error {
+	expectedResponse := getExpectedGetItemsResponseBody(userName)
+
+	if statusCode != 200 {
+		return NewErrWrongGetItemsResponse("Wrong Status Code")
+	}
+
+	if response != expectedResponse {
+		return NewErrWrongGetItemsResponse("Wrong response body")
 	}
 
 	return nil
@@ -121,21 +171,45 @@ func sendRequest(path, queryParams, body string) (*http.Response, error) {
 	return response, err
 }
 
+type ResponseBody struct {
+	Nickname string `json:"nickname"`
+	Items    []Item `json:"items"`
+}
+
 func startTestClient(path, queryParam, body string, currentClientNumber int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	for currentMessageNumber := 0; currentMessageNumber < testMessagesNum; currentMessageNumber++ {
-		response, err := sendRequest(path, queryParam, body)
-		if err != nil {
-			panic(err)
-		}
+		response, _ := sendRequest(path, queryParam, body)
+
+		responseBytes, _ := ioutil.ReadAll(response.Body)
 
 		logInfo.Printf("[Goroutine %d] Message %d was successfully sent\n", currentClientNumber, currentMessageNumber)
 
-		if resultCheck := checkClientResponse("", response); resultCheck != nil {
-			logError.Printf("[Goroutine %d][Message %d] Got invalid response. Error Message: %s\n", currentMessageNumber, currentClientNumber, resultCheck)
+		if resultCheck := checkGetItemsResponse("", string(responseBytes), response.StatusCode); resultCheck.(type) != nil {
+			logError.Printf("[Goroutine %d][Message %d][Get Items Test] Got invalid response. Error Message: %s\n", currentClientNumber, currentMessageNumber, resultCheck)
 		} else {
-			logInfo.Printf("[Goroutine %d][Message %d] Got valid response\n", currentMessageNumber, currentClientNumber)
+			logInfo.Printf("[Goroutine %d][Message %d][Get Items Test] Got valid response\n", currentClientNumber, currentMessageNumber)
+
+			var responseBody = ResponseBody{}
+
+			json.Unmarshal(responseBytes, responseBody)
+
+			items := responseBody.Items
+
+			for _, currentItem := range items {
+				requestBody, _ := json.Marshal(currentItem)
+
+				response, _ := sendRequest("/buy", queryParam, string(requestBody))
+
+				responseBytes, _ := ioutil.ReadAll(response.Body)
+
+				if resultCheck := checkBuyItemResponse(currentItem.Name, string(responseBytes), response.StatusCode); resultCheck != nil {
+					logError.Printf("[Goroutine %d][Message %d][Buy Items Test] Got invalid response. Error Message: %s\n", currentClientNumber, currentMessageNumber, resultCheck)
+				} else {
+					logInfo.Printf("[Goroutine %d][Message %d][Buy Items Test] Got valid response\n", currentClientNumber, currentMessageNumber)
+				}
+			}
 		}
 	}
 }
