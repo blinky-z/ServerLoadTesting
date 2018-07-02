@@ -13,11 +13,15 @@ import (
 	"bytes"
 	"mime/multipart"
 	"sync/atomic"
+	"net/url"
 )
 
 var (
 	logInfo  *log.Logger
 	logError *log.Logger
+
+	testClientsNum        int
+	testClientMessagesNum int
 
 	totalMessagesCount uint32
 
@@ -25,6 +29,10 @@ var (
 	buyItemsErrors []ErrBuyItems
 
 	mux *sync.Mutex
+)
+
+const (
+	warmUpClientsNum int = 5
 )
 
 type ErrGetItems struct {
@@ -45,23 +53,20 @@ func (err *ErrBuyItems) Error() string {
 	return "[" + err.time.Format("15:04:05") + "] " + err.message
 }
 
-func Init(infoHandle io.Writer, errorHandle io.Writer) {
+func Init(infoHandle, errorHandle io.Writer, initTestClientsNum, initTestClientMessagesNum int) {
 	logInfo = log.New(infoHandle, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 	logError = log.New(errorHandle, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	totalMessagesCount = 0
+
+	testClientsNum = initTestClientsNum
+	testClientMessagesNum = initTestClientMessagesNum
 
 	getItemsErrors = make([]ErrGetItems, 0)
 	buyItemsErrors = make([]ErrBuyItems, 0)
 
 	mux = &sync.Mutex{}
 }
-
-const (
-	warmUpClientsNum = 5
-	testClientsNum   = 10
-	testMessagesNum  = 10
-)
 
 type Item struct {
 	Name  string `json:"name"`
@@ -157,23 +162,22 @@ func checkGetItemsResponse(userName, response string, statusCode int) *ErrGetIte
 	return nil
 }
 
-func sendRequest(path, queryParams, body, contentType string) (*http.Response, error) {
-	url := "http://localhost:8080" + path
+func sendRequest(path, queryParams, contentType, body string) (*http.Response, error) {
+	requestUrl := "http://localhost:8080" + path
 
 	var response *http.Response
 	var err error
 
 	if body == "" {
 		if queryParams != "" {
-			url += "?" + queryParams
+			requestUrl += "?" + queryParams
 		}
 
-		response, err = http.Get(url)
+		response, err = http.Get(requestUrl)
 	} else {
 		switch contentType {
 		case "application/x-www-form-urlencoded":
-			body = "json=" + body
-			response, err = http.Post(url, contentType, bytes.NewBuffer([]byte(body)))
+			response, err = http.PostForm(requestUrl, url.Values{"json" : {body}})
 		case "multipart/form-data":
 			client := &http.Client{}
 
@@ -184,7 +188,7 @@ func sendRequest(path, queryParams, body, contentType string) (*http.Response, e
 
 			writer.Close()
 
-			request, _ := http.NewRequest("POST", url, multipartBody)
+			request, _ := http.NewRequest("POST", requestUrl, multipartBody)
 			request.Header.Set("Content-Type", writer.FormDataContentType())
 
 			response, err = client.Do(request)
@@ -199,11 +203,11 @@ type ResponseBody struct {
 	Items    []Item `json:"items"`
 }
 
-func startTestClient(path, queryParam, body string, currentClientNumber int, wg *sync.WaitGroup) {
+func startTestClient(path, queryParam, contentType, body string, currentClientNumber int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	for currentMessageNumber := 0; currentMessageNumber < testMessagesNum; currentMessageNumber++ {
-		response, _ := sendRequest(path, queryParam, body, "")
+	for currentMessageNumber := 0; currentMessageNumber < testClientMessagesNum; currentMessageNumber++ {
+		response, _ := sendRequest(path, queryParam, contentType, body)
 
 		atomic.AddUint32(&totalMessagesCount, 1)
 
@@ -255,7 +259,8 @@ func startTestClient(path, queryParam, body string, currentClientNumber int, wg 
 }
 
 func main() {
-	Init(os.Stdout, os.Stderr)
+	clientsNum, clientsMessagesNum := 10, 10
+	Init(os.Stdout, os.Stderr, clientsNum, clientsMessagesNum)
 
 	wgWarmUp := &sync.WaitGroup{}
 
@@ -263,9 +268,9 @@ func main() {
 	for currentClientNumber := 0; currentClientNumber < warmUpClientsNum; currentClientNumber++ {
 		wgWarmUp.Add(1)
 
-		path, queryParams, requestBody := "/", "", ""
+		path, queryParams, contentType, requestBody := "/", "", "x-www-form-urlencoded", ""
 
-		go startTestClient(path, queryParams, requestBody, currentClientNumber, wgWarmUp)
+		go startTestClient(path, queryParams, contentType, requestBody, currentClientNumber, wgWarmUp)
 	}
 	time.Sleep(time.Millisecond)
 
@@ -279,15 +284,15 @@ func main() {
 	for currentClientNumber := 0; currentClientNumber < testClientsNum; currentClientNumber++ {
 		wgTest.Add(1)
 
-		path, queryParams, requestBody := "/", "", ""
+		path, queryParams, contentType, requestBody := "/", "", "x-www-form-urlencoded", ""
 
-		go startTestClient(path, queryParams, requestBody, currentClientNumber, wgTest)
+		go startTestClient(path, queryParams, contentType, requestBody, currentClientNumber, wgTest)
 	}
 	time.Sleep(time.Millisecond)
 
 	wgTest.Wait()
 
-	logInfo.Printf("[MAIN] All tests has been done. Requests was sended count: %d. " +
+	logInfo.Printf("[MAIN] All tests has been done. Sended requests count: %d. " +
 		"Error statistics: %d errors occured during get items tests, %d errors occured during buy items tests",
 		totalMessagesCount, len(getItemsErrors), len(buyItemsErrors))
 }
