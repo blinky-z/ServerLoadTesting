@@ -213,9 +213,9 @@ func BuyItems(currentClientNumber int, contentType string, items *[]Item) {
 
 		responseBytes, _ := ioutil.ReadAll(response.Body)
 
-		resultCheck := checkBuyItemResponse(currentItem.Name, string(responseBytes), response.StatusCode)
+		if resultCheck := checkBuyItemResponse(currentItem.Name, string(responseBytes), response.StatusCode);
+		resultCheck != nil {
 
-		if resultCheck != nil {
 			logError.Printf("[Goroutine %d][Message %d][Buy Items Test] Got invalid response. "+
 				"Error Message: %s", currentClientNumber, index, resultCheck)
 
@@ -223,7 +223,8 @@ func BuyItems(currentClientNumber int, contentType string, items *[]Item) {
 			buyItemsErrors = append(buyItemsErrors, *resultCheck)
 			mux.Unlock()
 		} else {
-			logInfo.Printf("[Goroutine %d][Message %d][Buy Items Test] Got valid response", currentClientNumber, index)
+			logInfo.Printf("[Goroutine %d][Message %d][Buy Items Test] Got valid response",
+				currentClientNumber, index)
 		}
 	}
 }
@@ -238,7 +239,9 @@ func startTestClient(userName, path, queryParam, contentType, body string, curre
 
 		responseBytes, _ := ioutil.ReadAll(response.Body)
 
-		if resultCheck := checkGetItemsResponse(userName, string(responseBytes), response.StatusCode); resultCheck != nil {
+		if resultCheck := checkGetItemsResponse(userName, string(responseBytes), response.StatusCode);
+		resultCheck != nil {
+
 			logError.Printf("[Goroutine %d][Message %d][Get Items Test] Got invalid response. "+
 				"Error Message: %s", currentClientNumber, currentMessageNumber, resultCheck)
 
