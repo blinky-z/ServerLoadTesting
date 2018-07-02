@@ -203,6 +203,31 @@ func sendRequest(path, queryParams, contentType, body string) (*http.Response, e
 	return response, err
 }
 
+func BuyItems(currentClientNumber int, contentType string, items *[]Item) {
+	for index, currentItem := range *items {
+		atomic.AddUint32(&totalMessagesCount, 1)
+
+		requestBody, _ := json.Marshal(currentItem)
+
+		response, _ := sendRequest("/buy", "", contentType, string(requestBody))
+
+		responseBytes, _ := ioutil.ReadAll(response.Body)
+
+		resultCheck := checkBuyItemResponse(currentItem.Name, string(responseBytes), response.StatusCode)
+
+		if resultCheck != nil {
+			logError.Printf("[Goroutine %d][Message %d][Buy Items Test] Got invalid response. "+
+				"Error Message: %s", currentClientNumber, index, resultCheck)
+
+			mux.Lock()
+			buyItemsErrors = append(buyItemsErrors, *resultCheck)
+			mux.Unlock()
+		} else {
+			logInfo.Printf("[Goroutine %d][Message %d][Buy Items Test] Got valid response", currentClientNumber, index)
+		}
+	}
+}
+
 func startTestClient(userName, path, queryParam, contentType, body string, currentClientNumber int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
@@ -229,29 +254,7 @@ func startTestClient(userName, path, queryParam, contentType, body string, curre
 
 			items := responseBody.Items
 
-			for index, currentItem := range items {
-				atomic.AddUint32(&totalMessagesCount, 1)
-
-				buyItemRequestBody, _ := json.Marshal(currentItem)
-
-				response, _ := sendRequest("/buy", queryParam, contentType, string(buyItemRequestBody))
-
-				responseBytes, _ := ioutil.ReadAll(response.Body)
-
-				resultCheck := checkBuyItemResponse(currentItem.Name, string(responseBytes), response.StatusCode)
-
-				if resultCheck != nil {
-					logError.Printf("[Goroutine %d][Message %d][Buy Items Test] Got invalid response. "+
-						"Error Message: %s", currentClientNumber, index, resultCheck)
-
-					mux.Lock()
-					buyItemsErrors = append(buyItemsErrors, *resultCheck)
-					mux.Unlock()
-				} else {
-					logInfo.Printf("[Goroutine %d][Message %d][Buy Items Test] Got valid response",
-						currentClientNumber, index)
-				}
-			}
+			BuyItems(currentClientNumber, contentType, &items)
 		}
 	}
 }
