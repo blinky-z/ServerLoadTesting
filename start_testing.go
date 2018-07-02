@@ -7,11 +7,11 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"time"
-	"bytes"
 	"log"
 	"io"
 	"os"
-	"errors"
+	"bytes"
+	"mime/multipart"
 	"sync/atomic"
 )
 
@@ -19,14 +19,42 @@ var (
 	logInfo  *log.Logger
 	logError *log.Logger
 
-	getItemsErrorCount uint32 = 0
-	buyItemsErrorCount uint32 = 0
+	totalMessagesCount uint32
+
+	getItemsErrors []ErrGetItems
+	buyItemsErrors []ErrBuyItems
+
+	mux *sync.Mutex
 )
+
+type ErrGetItems struct {
+	time time.Time
+	message string
+}
+
+type ErrBuyItems struct {
+	time time.Time
+	message string
+}
+
+func (err *ErrGetItems) Error() string {
+	return "[" + err.time.Format("15:04:05") + "] " + err.message
+}
+
+func (err *ErrBuyItems) Error() string {
+	return "[" + err.time.Format("15:04:05") + "] " + err.message
+}
 
 func Init(infoHandle io.Writer, errorHandle io.Writer) {
 	logInfo = log.New(infoHandle, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
-
 	logError = log.New(errorHandle, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+
+	totalMessagesCount = 0
+
+	getItemsErrors = make([]ErrGetItems, 0)
+	buyItemsErrors = make([]ErrBuyItems, 0)
+
+	mux = &sync.Mutex{}
 }
 
 const (
@@ -101,35 +129,35 @@ func getExpectedBuyItemResponseBody(itemName string) string {
 	return string(jsonBody)
 }
 
-func checkBuyItemResponse(requestedItemName, response string, statusCode int) error {
+func checkBuyItemResponse(requestedItemName, response string, statusCode int) *ErrBuyItems {
 	expectedResponse := getExpectedBuyItemResponseBody(requestedItemName)
 
 	if statusCode != 200 {
-		return errors.New("wrong Status Code")
+		return &ErrBuyItems{time : time.Now(), message: "wrong status code"}
 	}
 
 	if response != expectedResponse {
-		return errors.New("wrong response body")
+		return &ErrBuyItems{time : time.Now(), message: "wrong response body"}
 	}
 
 	return nil
 }
 
-func checkGetItemsResponse(userName, response string, statusCode int) error {
+func checkGetItemsResponse(userName, response string, statusCode int) *ErrGetItems {
 	expectedResponse := getExpectedGetItemsResponseBody(userName)
 
 	if statusCode != 200 {
-		return errors.New("wrong status code")
+		return &ErrGetItems{time : time.Now(), message: "wrong status code"}
 	}
 
 	if response != expectedResponse {
-		return errors.New("wrong response body")
+		return &ErrGetItems{time : time.Now(), message: "wrong response body"}
 	}
 
 	return nil
 }
 
-func sendRequest(path, queryParams, body string) (*http.Response, error) {
+func sendRequest(path, queryParams, body, contentType string) (*http.Response, error) {
 	url := "http://localhost:8080" + path
 
 	var response *http.Response
@@ -142,7 +170,25 @@ func sendRequest(path, queryParams, body string) (*http.Response, error) {
 
 		response, err = http.Get(url)
 	} else {
-		response, err = http.Post(url, "application/json", bytes.NewBuffer([]byte(body)))
+		switch contentType {
+		case "application/x-www-form-urlencoded":
+			body = "json=" + body
+			response, err = http.Post(url, contentType, bytes.NewBuffer([]byte(body)))
+		case "multipart/form-data":
+			client := &http.Client{}
+
+			multipartBody := &bytes.Buffer{}
+			writer := multipart.NewWriter(multipartBody)
+
+			writer.WriteField("json", body)
+
+			writer.Close()
+
+			request, _ := http.NewRequest("POST", url, multipartBody)
+			request.Header.Set("Content-Type", writer.FormDataContentType())
+
+			response, err = client.Do(request)
+		}
 	}
 
 	return response, err
@@ -157,33 +203,43 @@ func startTestClient(path, queryParam, body string, currentClientNumber int, wg 
 	defer wg.Done()
 
 	for currentMessageNumber := 0; currentMessageNumber < testMessagesNum; currentMessageNumber++ {
-		response, _ := sendRequest(path, queryParam, body)
+		response, _ := sendRequest(path, queryParam, body, "")
+
+		atomic.AddUint32(&totalMessagesCount, 1)
 
 		responseBytes, _ := ioutil.ReadAll(response.Body)
 
-		logInfo.Printf("[Goroutine %d] Message %d was successfully sent\n", currentClientNumber, currentMessageNumber)
-
 		if resultCheck := checkGetItemsResponse("", string(responseBytes), response.StatusCode); resultCheck != nil {
 			logError.Printf("[Goroutine %d][Message %d][Get Items Test] Got invalid response. Error Message: %s\n", currentClientNumber, currentMessageNumber, resultCheck)
-			atomic.AddUint32(&getItemsErrorCount, 1)
+
+			mux.Lock()
+			getItemsErrors = append(getItemsErrors, *resultCheck)
+			mux.Unlock()
+
 		} else {
 			logInfo.Printf("[Goroutine %d][Message %d][Get Items Test] Got valid response\n", currentClientNumber, currentMessageNumber)
 
 			var responseBody = ResponseBody{}
-			json.Unmarshal(responseBytes, responseBody)
+			json.Unmarshal(responseBytes, &responseBody)
 
 			items := responseBody.Items
 
 			for index, currentItem := range items {
+				atomic.AddUint32(&totalMessagesCount, 1)
+
 				requestBody, _ := json.Marshal(currentItem)
 
-				response, _ := sendRequest("/buy", queryParam, string(requestBody))
+				response, _ := sendRequest("/buy", queryParam, string(requestBody), "application/x-www-form-urlencoded")
+				//response, _ := sendRequest("/buy", queryParam, string(requestBody), "multipart/form-data")
 
 				responseBytes, _ := ioutil.ReadAll(response.Body)
 
 				if resultCheck := checkBuyItemResponse(currentItem.Name, string(responseBytes), response.StatusCode); resultCheck != nil {
 					logError.Printf("[Goroutine %d][Message %d][Buy Items Test] Got invalid response. Error Message: %s\n", currentClientNumber, index, resultCheck)
-					atomic.AddUint32(&buyItemsErrorCount, 1)
+
+					mux.Lock()
+					buyItemsErrors = append(buyItemsErrors, *resultCheck)
+					mux.Unlock()
 				} else {
 					logInfo.Printf("[Goroutine %d][Message %d][Buy Items Test] Got valid response\n", currentClientNumber, index)
 				}
@@ -209,11 +265,9 @@ func main() {
 
 	wgWarmUp.Wait()
 
-	logInfo.Println("[MAIN] Warm up is done")
+	logInfo.Println("[MAIN] Warm up has been done")
 
 	wgTest := &sync.WaitGroup{}
-
-	startTestingTime := time.Now()
 
 	// create clients for web server load testing
 	for currentClientNumber := 0; currentClientNumber < testClientsNum; currentClientNumber++ {
@@ -227,8 +281,6 @@ func main() {
 
 	wgTest.Wait()
 
-	endTestingTime := time.Now()
-	elapsed := endTestingTime.Sub(startTestingTime)
-
-	logInfo.Printf("[MAIN] All tests are passed. Elapsed time: %v seconds", elapsed.Seconds())
+	logInfo.Printf("[MAIN] All tests has been done. Requests was sended count: %d. " +
+		"Error statistics: %d errors occured during get items tests, %d errors occured during buy items tests", totalMessagesCount, len(getItemsErrors), len(buyItemsErrors))
 }
