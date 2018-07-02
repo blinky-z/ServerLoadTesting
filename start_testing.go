@@ -210,14 +210,16 @@ func startTestClient(path, queryParam, body string, currentClientNumber int, wg 
 		responseBytes, _ := ioutil.ReadAll(response.Body)
 
 		if resultCheck := checkGetItemsResponse("", string(responseBytes), response.StatusCode); resultCheck != nil {
-			logError.Printf("[Goroutine %d][Message %d][Get Items Test] Got invalid response. Error Message: %s\n", currentClientNumber, currentMessageNumber, resultCheck)
+			logError.Printf("[Goroutine %d][Message %d][Get Items Test] Got invalid response. " +
+				"Error Message: %s\n", currentClientNumber, currentMessageNumber, resultCheck)
 
 			mux.Lock()
 			getItemsErrors = append(getItemsErrors, *resultCheck)
 			mux.Unlock()
 
 		} else {
-			logInfo.Printf("[Goroutine %d][Message %d][Get Items Test] Got valid response\n", currentClientNumber, currentMessageNumber)
+			logInfo.Printf("[Goroutine %d][Message %d][Get Items Test] Got valid response\n",
+				currentClientNumber, currentMessageNumber)
 
 			var responseBody = ResponseBody{}
 			json.Unmarshal(responseBytes, &responseBody)
@@ -234,14 +236,18 @@ func startTestClient(path, queryParam, body string, currentClientNumber int, wg 
 
 				responseBytes, _ := ioutil.ReadAll(response.Body)
 
-				if resultCheck := checkBuyItemResponse(currentItem.Name, string(responseBytes), response.StatusCode); resultCheck != nil {
-					logError.Printf("[Goroutine %d][Message %d][Buy Items Test] Got invalid response. Error Message: %s\n", currentClientNumber, index, resultCheck)
+				resultCheck := checkBuyItemResponse(currentItem.Name, string(responseBytes), response.StatusCode)
+
+				if resultCheck != nil {
+					logError.Printf("[Goroutine %d][Message %d][Buy Items Test] Got invalid response. " +
+						"Error Message: %s\n", currentClientNumber, index, resultCheck)
 
 					mux.Lock()
 					buyItemsErrors = append(buyItemsErrors, *resultCheck)
 					mux.Unlock()
 				} else {
-					logInfo.Printf("[Goroutine %d][Message %d][Buy Items Test] Got valid response\n", currentClientNumber, index)
+					logInfo.Printf("[Goroutine %d][Message %d][Buy Items Test] Got valid response\n",
+						currentClientNumber, index)
 				}
 			}
 		}
@@ -282,5 +288,6 @@ func main() {
 	wgTest.Wait()
 
 	logInfo.Printf("[MAIN] All tests has been done. Requests was sended count: %d. " +
-		"Error statistics: %d errors occured during get items tests, %d errors occured during buy items tests", totalMessagesCount, len(getItemsErrors), len(buyItemsErrors))
+		"Error statistics: %d errors occured during get items tests, %d errors occured during buy items tests",
+		totalMessagesCount, len(getItemsErrors), len(buyItemsErrors))
 }
