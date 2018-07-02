@@ -287,7 +287,8 @@ func main() {
 	for currentClientNumber := 0; currentClientNumber < testClientsNum; currentClientNumber++ {
 		wgTest.Add(1)
 
-		userName, path, queryParams, contentType, requestBody := "", "/", "", "application/x-www-form-urlencoded", ""
+		userName, path, queryParams, contentType, requestBody :=
+			"", "/", "", "application/x-www-form-urlencoded", ""
 
 		go startTestClient(userName, path, queryParams, contentType, requestBody, currentClientNumber, wgTest)
 	}
@@ -295,7 +296,8 @@ func main() {
 	for currentClientNumber := 0; currentClientNumber < testClientsNum; currentClientNumber++ {
 		wgTest.Add(1)
 
-		userName, path, queryParams, contentType, requestBody := "", "/", "", "multipart/form-data", ""
+		userName, path, queryParams, contentType, requestBody :=
+			"", "/", "", "multipart/form-data", ""
 
 		go startTestClient(userName, path, queryParams, contentType, requestBody, currentClientNumber, wgTest)
 	}
@@ -303,7 +305,8 @@ func main() {
 	for currentClientNumber := 0; currentClientNumber < testClientsNum; currentClientNumber++ {
 		wgTest.Add(1)
 
-		userName, path, queryParams, contentType, requestBody := "dmitry", "/", "name=dmitry", "application/x-www-form-urlencoded", ""
+		userName, path, queryParams, contentType, requestBody :=
+			"dmitry", "/", "name=dmitry", "application/x-www-form-urlencoded", ""
 
 		go startTestClient(userName, path, queryParams, contentType, requestBody, currentClientNumber, wgTest)
 	}
@@ -311,7 +314,8 @@ func main() {
 	for currentClientNumber := 0; currentClientNumber < testClientsNum; currentClientNumber++ {
 		wgTest.Add(1)
 
-		userName, path, queryParams, contentType, requestBody := "dmitry", "/", "name=dmitry", "multipart/form-data", ""
+		userName, path, queryParams, contentType, requestBody :=
+			"dmitry", "/", "name=dmitry", "multipart/form-data", ""
 
 		go startTestClient(userName, path, queryParams, contentType, requestBody, currentClientNumber, wgTest)
 	}
@@ -319,7 +323,8 @@ func main() {
 	for currentClientNumber := 0; currentClientNumber < testClientsNum; currentClientNumber++ {
 		wgTest.Add(1)
 
-		userName, path, queryParams, contentType, requestBody := "maxim", "/", "", "application/x-www-form-urlencoded", `{"name":"maxim"}`
+		userName, path, queryParams, contentType, requestBody :=
+			"maxim", "/", "", "application/x-www-form-urlencoded", `{"name":"maxim"}`
 
 		go startTestClient(userName, path, queryParams, contentType, requestBody, currentClientNumber, wgTest)
 	}
@@ -327,7 +332,8 @@ func main() {
 	for currentClientNumber := 0; currentClientNumber < testClientsNum; currentClientNumber++ {
 		wgTest.Add(1)
 
-		userName, path, queryParams, contentType, requestBody := "maxim", "/", "", "multipart/form-data", `{"name":"maxim"}`
+		userName, path, queryParams, contentType, requestBody :=
+					"maxim", "/", "", "multipart/form-data", `{"name":"maxim"}`
 
 		go startTestClient(userName, path, queryParams, contentType, requestBody, currentClientNumber, wgTest)
 	}
