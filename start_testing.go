@@ -28,6 +28,9 @@ var (
 	getItemsErrors []ErrGetItems
 	buyItemsErrors []ErrBuyItems
 
+	getItemsRequestTimes []GetItemsRequestTime
+	buyItemsRequestTimes []BuyItemsRequestTime
+
 	mux *sync.Mutex
 )
 
@@ -65,7 +68,22 @@ func Init(infoHandle, errorHandle io.Writer, initTestClientsNum, initTestClientM
 	getItemsErrors = make([]ErrGetItems, 0)
 	buyItemsErrors = make([]ErrBuyItems, 0)
 
+	getItemsRequestTimes = make([]GetItemsRequestTime, 0)
+	buyItemsRequestTimes = make([]BuyItemsRequestTime, 0)
+
 	mux = &sync.Mutex{}
+}
+
+type GetItemsRequestTime struct {
+	clientsNumberWhileSendingRequest int
+	timeWhileSendingRequest          time.Time
+	elapsedTime                      time.Duration
+}
+
+type BuyItemsRequestTime struct {
+	clientsNumberWhileSendingRequest int
+	timeWhileSendingRequest          time.Time
+	elapsedTime                      time.Duration
 }
 
 type ResponseBody struct {
@@ -167,22 +185,35 @@ func checkGetItemsResponse(userName, response string, statusCode int) *ErrGetIte
 	return nil
 }
 
-func sendRequest(path, queryParams, contentType, body string) (*http.Response, error) {
+func sendRequest(path, queryParams, contentType, body string) (statusCode int, responseBody string) {
 	requestUrl := "http://localhost:8080" + path
 
 	var response *http.Response
-	var err error
+
+	var sendingStartTime time.Time
+	var sendingEndTime time.Time
+	var clientsNum int
 
 	if body == "" {
 		if queryParams != "" {
 			requestUrl += "?" + queryParams
 		}
 
-		response, err = http.Get(requestUrl)
+		sendingStartTime = time.Now()
+		clientsNum = testClientsNum
+
+		response, _ = http.Get(requestUrl)
+
+		sendingEndTime = time.Now()
 	} else {
 		switch contentType {
 		case "application/x-www-form-urlencoded":
-			response, err = http.PostForm(requestUrl, url.Values{"json": {body}})
+			sendingStartTime = time.Now()
+			clientsNum = testClientsNum
+
+			response, _ = http.PostForm(requestUrl, url.Values{"json": {body}})
+
+			sendingEndTime = time.Now()
 		case "multipart/form-data":
 			client := &http.Client{}
 
@@ -196,11 +227,42 @@ func sendRequest(path, queryParams, contentType, body string) (*http.Response, e
 			request, _ := http.NewRequest("POST", requestUrl, multipartBody)
 			request.Header.Set("Content-Type", writer.FormDataContentType())
 
-			response, err = client.Do(request)
+			sendingStartTime = time.Now()
+			clientsNum = testClientsNum
+
+			response, _ = client.Do(request)
+
+			sendingEndTime = time.Now()
 		}
 	}
 
-	return response, err
+	switch path {
+	case "/", "":
+		requestTime := GetItemsRequestTime{}
+
+		requestTime.clientsNumberWhileSendingRequest = clientsNum
+		requestTime.timeWhileSendingRequest = sendingStartTime
+		requestTime.elapsedTime = sendingEndTime.Sub(sendingStartTime)
+
+		mux.Lock()
+		getItemsRequestTimes = append(getItemsRequestTimes, requestTime)
+		mux.Unlock()
+	case "/buy":
+		requestTime := BuyItemsRequestTime{}
+
+		requestTime.clientsNumberWhileSendingRequest = clientsNum
+		requestTime.timeWhileSendingRequest = sendingStartTime
+		requestTime.elapsedTime = sendingEndTime.Sub(sendingStartTime)
+
+		mux.Lock()
+		buyItemsRequestTimes = append(buyItemsRequestTimes, requestTime)
+		mux.Unlock()
+	}
+
+	defer response.Body.Close()
+	responseBytes, _ := ioutil.ReadAll(response.Body)
+
+	return response.StatusCode, string(responseBytes)
 }
 
 func BuyItems(currentClientNumber int, contentType string, items *[]Item) {
@@ -209,11 +271,9 @@ func BuyItems(currentClientNumber int, contentType string, items *[]Item) {
 
 		requestBody, _ := json.Marshal(currentItem)
 
-		response, _ := sendRequest("/buy", "", contentType, string(requestBody))
+		responseStatusCode, responseBody := sendRequest("/buy", "", contentType, string(requestBody))
 
-		responseBytes, _ := ioutil.ReadAll(response.Body)
-
-		if resultCheck := checkBuyItemResponse(currentItem.Name, string(responseBytes), response.StatusCode);
+		if resultCheck := checkBuyItemResponse(currentItem.Name, responseBody, responseStatusCode);
 		resultCheck != nil {
 
 			logError.Printf("[Goroutine %d][Message %d][Buy Items Test] Got invalid response. "+
@@ -233,13 +293,11 @@ func startTestClient(userName, path, queryParam, contentType, body string, curre
 	defer wg.Done()
 
 	for currentMessageNumber := 0; currentMessageNumber < testClientMessagesNum; currentMessageNumber++ {
-		response, _ := sendRequest(path, queryParam, contentType, body)
+		responseStatusCode, responseBody := sendRequest(path, queryParam, contentType, body)
 
 		atomic.AddUint32(&totalMessagesCount, 1)
 
-		responseBytes, _ := ioutil.ReadAll(response.Body)
-
-		if resultCheck := checkGetItemsResponse(userName, string(responseBytes), response.StatusCode);
+		if resultCheck := checkGetItemsResponse(userName, responseBody, responseStatusCode);
 		resultCheck != nil {
 
 			logError.Printf("[Goroutine %d][Message %d][Get Items Test] Got invalid response. "+
@@ -249,13 +307,13 @@ func startTestClient(userName, path, queryParam, contentType, body string, curre
 			getItemsErrors = append(getItemsErrors, *resultCheck)
 			mux.Unlock()
 		} else {
-			logInfo.Printf("[Goroutine %d][Message %d][Get Items Test] Got valid response",
-				currentClientNumber, currentMessageNumber)
+			logInfo.Printf("[Goroutine %d][Message %d][Get Items Test] Got valid response. " +
+				"Testing buying of received items...", currentClientNumber, currentMessageNumber)
 
-			var responseBody = ResponseBody{}
-			json.Unmarshal(responseBytes, &responseBody)
+			var parsedResponse = ResponseBody{}
+			json.Unmarshal([]byte(responseBody), &parsedResponse )
 
-			items := responseBody.Items
+			items := parsedResponse.Items
 
 			BuyItems(currentClientNumber, contentType, &items)
 		}
@@ -268,6 +326,7 @@ func main() {
 
 	//--------------------
 	//Warm Up A Test Ground
+	//--------------------
 
 	wgWarmUp := &sync.WaitGroup{}
 
@@ -345,6 +404,8 @@ func main() {
 	}
 
 	wgTest.Wait()
+
+	//--------------------
 
 	logInfo.Printf("[MAIN] All tests has been done. Sended requests count: %d. "+
 		"Error statistics: %d errors occured during get items tests, %d errors occured during buy items tests",
