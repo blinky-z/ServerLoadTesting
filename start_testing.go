@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"time"
 	"log"
-	"io"
 	"os"
 	"bytes"
 	"mime/multipart"
@@ -16,11 +15,16 @@ import (
 	"net/url"
 	"strings"
 	"math/rand"
+	"go/build"
 )
 
 var (
-	logInfo  *log.Logger
-	logError *log.Logger
+
+	logInfoOutfile, _ = os.OpenFile(build.Default.GOPATH + "/ServerLoadTesting/logs/Info.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+	logErrorOutfile, _ = os.OpenFile(build.Default.GOPATH + "/ServerLoadTesting/logs/Error.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+
+	logInfo = log.New(logInfoOutfile, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	logError = log.New(logErrorOutfile, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	testClientsNum        int
 	testMaxClientsNum 	  int
@@ -61,10 +65,7 @@ func (err *ErrBuyItems) Error() string {
 	return "[" + err.time.Format("15:04:05") + "] " + err.message
 }
 
-func Init(infoHandle, errorHandle io.Writer, initTestClientsNum, initMaxClientsNum, initTestClientMessagesNum int) {
-	logInfo = log.New(infoHandle, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
-	logError = log.New(errorHandle, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
-
+func Init(initTestClientsNum, initMaxClientsNum, initTestClientMessagesNum int) {
 	totalMessagesCount = 0
 
 	testClientsNum = initTestClientsNum
@@ -381,7 +382,7 @@ func BuyItems(currentClientNumber int, contentType string, items *[]Item) {
 		responseStatusCode, responseBody := sendRequest("/buy", "", contentType, string(requestBody))
 
 		if resultCheck := checkBuyItemResponse(currentItem.Name, responseBody, responseStatusCode);
-		resultCheck != nil {
+			resultCheck != nil {
 
 			logError.Printf("[Goroutine %d][Message %d][Buy Items Test] Got invalid response. "+
 				"Error Message: %s", currentClientNumber, index, resultCheck)
@@ -405,7 +406,7 @@ func startTestClient(userName, queryParam, contentType, body string, currentClie
 		atomic.AddUint32(&totalMessagesCount, 1)
 
 		if resultCheck := checkGetItemsResponse(userName, responseBody, responseStatusCode);
-		resultCheck != nil {
+			resultCheck != nil {
 
 			logError.Printf("[Goroutine %d][Message %d][Get Items Test] Got invalid response. "+
 				"Error Message: %s", currentClientNumber, currentMessageNumber, resultCheck)
@@ -449,8 +450,10 @@ func makeRequestParams(clientName string) (queryParams, contentType, requestBody
 }
 
 func main() {
-	clientsNum, maxClientsNum, clientsMessagesNum := 10, 200, 10
-	Init(os.Stdout, os.Stderr, clientsNum, maxClientsNum, clientsMessagesNum)
+	clientsNum, maxClientsNum, clientsMessagesNum := 10, 300, 10
+	Init(clientsNum, maxClientsNum, clientsMessagesNum)
+	defer logInfoOutfile.Close()
+	defer logErrorOutfile.Close()
 
 	//--------------------
 	//Warm Up A Test Ground
@@ -481,6 +484,7 @@ func main() {
 
 	for {
 		if testClientsNum > testMaxClientsNum {
+			logInfo.Printf("[MAIN] Reached clients limit. Stopping creating new clients...")
 			break
 		}
 
@@ -496,6 +500,7 @@ func main() {
 
 		time.Sleep(10 * time.Second)
 		testClientsNum += 50
+		logInfo.Printf("[MAIN] Adding new clients... Current clients count: %d", testClientsNum)
 	}
 
 	wgTest.Wait()
