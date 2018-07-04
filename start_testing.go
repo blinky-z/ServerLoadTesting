@@ -19,9 +19,10 @@ import (
 )
 
 var (
-
-	logInfoOutfile, _ = os.OpenFile(build.Default.GOPATH + "/ServerLoadTesting/logs/Info.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
-	logErrorOutfile, _ = os.OpenFile(build.Default.GOPATH + "/ServerLoadTesting/logs/Error.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+	logInfoOutfile, _ =
+		os.OpenFile(build.Default.GOPATH + "/ServerLoadTesting/logs/Info.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+	logErrorOutfile, _ =
+		os.OpenFile(build.Default.GOPATH + "/ServerLoadTesting/logs/Error.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
 
 	logInfo = log.New(logInfoOutfile, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 	logError = log.New(logErrorOutfile, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
@@ -44,6 +45,7 @@ var (
 )
 
 const (
+	serverUrl = "http://185.143.173.31"
 	warmUpClientsNum = 5
 )
 
@@ -294,7 +296,7 @@ func checkGetItemsResponse(userName, response string, statusCode int) *ErrGetIte
 }
 
 func sendRequest(path, queryParams, contentType, body string) (statusCode int, responseBody string) {
-	requestUrl := "http://localhost:8080" + path
+	requestUrl := serverUrl + path
 
 	var response *http.Response
 
@@ -450,7 +452,7 @@ func makeRequestParams(clientName string) (queryParams, contentType, requestBody
 }
 
 func main() {
-	clientsNum, maxClientsNum, clientsMessagesNum := 10, 300, 10
+	clientsNum, maxClientsNum, clientsMessagesNum := 10, 200, 10
 	Init(clientsNum, maxClientsNum, clientsMessagesNum)
 	defer logInfoOutfile.Close()
 	defer logErrorOutfile.Close()
@@ -495,12 +497,13 @@ func main() {
 
 			queryParams, contentType, requestBody := makeRequestParams(currentClientName)
 
-			go startTestClient(currentClientName, queryParams, contentType, requestBody, currentClientNumber, wgTest)
+			go startTestClient(
+				currentClientName, queryParams, contentType, requestBody, currentClientNumber, wgTest)
 		}
 
 		time.Sleep(10 * time.Second)
 		testClientsNum += 50
-		logInfo.Printf("[MAIN] Adding new clients... Current clients count: %d", testClientsNum)
+		logInfo.Printf("[MAIN] Added new clients. Current clients count: %d", testClientsNum)
 	}
 
 	wgTest.Wait()
