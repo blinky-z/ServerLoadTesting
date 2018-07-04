@@ -24,9 +24,8 @@ var (
 	logInfo = log.New(logInfoOutfile, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 	logError = log.New(logErrorOutfile, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 
-	testClientsNum        int
-	testMaxClientsNum 	  int
-	testClientMessagesNum int
+	testClientsNum        int = 10
+	testClientMessagesNum int = 10
 
 	totalMessagesCount uint32
 
@@ -38,12 +37,14 @@ var (
 
 	mux *sync.Mutex
 
-	requestClientNames []string
+	requestClientNames = []string{"saneexclamation","buythroated","infuriatedlutchet","ticketbright","insecureloudmouth","soundingindirect","knowledgewives","gearherring","farmershortcrust","variablehertz","ripplinglens","otherscontrol","turnhotsprings","veincelery","excessfamily","iceskatesbale","ruffsescape","pencilelements","yellstable","mushroomslomo","edgecord","possessivegreeting","hertzodds","groaninfected","interiorrotating","firechargeenzyme","sickshower","leukocytedrink","prominencetub","fieldsmustache","woodcocklawful","leatherarmy","achernarinstance","europalepton","planesalami","customersworkbench","infinityhatching","plughumbug","competingfag","farrumscut","perpetualfallen","unwittinglaying","dirtycopernicium","icehockeymeteoroid","merseybeatstarbucks","milkperoxide","flingwater","flagrantcoins","kraftzing","fellsargon","bobstaysloshed","trymercury","freegantonic","barnacleburnt","masonsstrawberry","delayedmale","xiphoidtutor","asheatable","tengmalmshingles","aquilabummage","spotsbiceps","violinanother","tawnysyntax","frogsfeisty","nodulespity","calledpliocene","soddinggluttonous","billowygillette","stuffboson","collarbonelargest","parliamentblizzard","sadmarkings","streetsbailey","surfernissan","democracydividers","alloythine","frugalmust","plancaplay","normalaleutian","stingandalusian","skuaallee","intendedshark","paradigmboards","ventureskeg","kalmansledder","plaindolphin","singermention","employvolta","womenthorough","huhshare","grumpycepheus","magnetremuda","moralsdisrupt","correctfierce","rollmetrics","skeinboiling","amiablebiotic","actmind","baconsiphon","complexvenison"}
 )
 
 const (
 	serverUrl = "http://185.143.173.31"
 	warmUpClientsNum = 100
+	testMaxClientsNum = 200
+
 )
 
 type ErrGetItems struct {
@@ -64,12 +65,8 @@ func (err *ErrBuyItems) Error() string {
 	return "[" + err.time.Format("15:04:05") + "] " + err.message
 }
 
-func Init(initTestClientsNum, initMaxClientsNum, initTestClientMessagesNum int) {
+func Init() {
 	totalMessagesCount = 0
-
-	testClientsNum = initTestClientsNum
-	testMaxClientsNum = initMaxClientsNum
-	testClientMessagesNum = initTestClientMessagesNum
 
 	getItemsErrors = make([]ErrGetItems, 0)
 	buyItemsErrors = make([]ErrBuyItems, 0)
@@ -449,8 +446,7 @@ func makeRequestParams(clientName string) (queryParams, contentType, requestBody
 }
 
 func main() {
-	clientsNum, maxClientsNum, clientsMessagesNum := 10, 200, 10
-	Init(clientsNum, maxClientsNum, clientsMessagesNum)
+	Init()
 	defer logInfoOutfile.Close()
 	defer logErrorOutfile.Close()
 
