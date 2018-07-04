@@ -15,14 +15,11 @@ import (
 	"net/url"
 	"strings"
 	"math/rand"
-	"go/build"
 )
 
 var (
-	logInfoOutfile, _ = os.OpenFile(
-			build.Default.GOPATH + "/ServerLoadTesting/logs/Info.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
-	logErrorOutfile, _ = os.OpenFile(
-		build.Default.GOPATH + "/ServerLoadTesting/logs/Error.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+	logInfoOutfile, _ = os.OpenFile("./logs/Info.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+	logErrorOutfile, _ = os.OpenFile("./logs/Error.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
 
 	logInfo = log.New(logInfoOutfile, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 	logError = log.New(logErrorOutfile, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
