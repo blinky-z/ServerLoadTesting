@@ -43,7 +43,7 @@ var (
 
 const (
 	serverUrl = "http://185.143.173.31"
-	warmUpClientsNum = 5
+	warmUpClientsNum = 100
 )
 
 type ErrGetItems struct {
