@@ -13,7 +13,6 @@ import (
 	"mime/multipart"
 	"sync/atomic"
 	"net/url"
-	"strings"
 	"math/rand"
 )
 
@@ -75,107 +74,6 @@ func Init() {
 	buyItemsRequestTimes = make([]BuyItemsRequestTime, 0)
 
 	mux = &sync.Mutex{}
-
-	requestClientNames = strings.Split("intriguegemini\n" +
-		"buggaggle\n" +
-		"denguenull\n" +
-		"jargonformulas\n" +
-		"wrapbasal\n" +
-		"aboundingturtleback\n" +
-		"irishadhesion\n" +
-		"motherseasily\n" +
-		"smoothconstant\n" +
-		"doublingunkindness\n"  +
-		"mewjack\n" +
-		"cagedpresser\n" +
-		"addictedoutspoken\n" +
-		"usurpointment\n" +
-		"packetharlot\n" +
-		"telradcreamed\n" +
-		"infamousjoining\n" +
-		"faceddribbling\n" +
-		"insidecast\n" +
-		"expectantclappin\n" +
-		"orientedindian\n" +
-		"settingcovalent\n" +
-		"satlicker\n" +
-		"driftdeserve\n" +
-		"wheatxpath\n" +
-		"morningtrekking\n" +
-		"throbbinguranus\n" +
-		"torquepopper\n" +
-		"eyepiecetack\n" +
-		"wingedobject\n" +
-		"chondrulebandage\n" +
-		"agendashoot\n" +
-		"cheepingpochard\n" +
-		"themhours\n" +
-		"skinningscottish\n" +
-		"levelbody\n" +
-		"roachurinary\n" +
-		"hurtpeafowl\n" +
-		"ropeapparel\n" +
-		"limitingmars\n" +
-		"blouseendemism\n" +
-		"woozyarcherfish\n" +
-		"glassesradar\n" +
-		"defendedboards\n" +
-		"occupyprism\n" +
-		"linkscone\n" +
-		"economistwombat\n" +
-		"floatingberyllium\n" +
-		"compilerbiking\n" +
-		"italicplacebo\n" +
-		"molecularessential\n" +
-		"twitchoakum\n" +
-		"assertmagnetic\n" +
-		"abscessablaze\n" +
-		"rockyterrine\n" +
-		"plumoseaffirm\n" +
-		"pavermurmer\n" +
-		"equipmentresolving\n" +
-		"decentobeisant\n" +
-		"cauliflowerdwindle\n" +
-		"thalliumwindy\n" +
-		"denebbicycling\n" +
-		"coltfurther\n" +
-		"complainbundevara\n" +
-		"ovalflamboyant\n" +
-		"impureplay\n" +
-		"languagechef\n" +
-		"woofecdysone\n" +
-		"artlessfumbling\n" +
-		"knaveapothem\n" +
-		"golfmagistrate\n" +
-		"bellhoppity\n" +
-		"scholarlyrockers\n" +
-		"listsbilliards\n" +
-		"kentledgegalilei\n" +
-		"mittensdutiful\n" +
-		"deformedcobalt\n" +
-		"reticulumrepeat\n" +
-		"whispersberserk\n" +
-		"knuckleheadsubdural\n" +
-		"melangeusd\n" +
-		"ghostmilder\n" +
-		"tealprune\n" +
-		"execchin\n" +
-		"bullockspride\n" +
-		"curioushexagon\n" +
-		"bawdresources\n" +
-		"liberatedloving\n" +
-		"dismalpassion\n" +
-		"bobolinkhaunting\n" +
-		"satellitetickle\n" +
-		"cepheusshiny\n" +
-		"decoratecurly\n" +
-		"mainsheetknee\n" +
-		"winningindustry\n" +
-		"pufftucana\n" +
-		"tasksscientist\n" +
-		"creepycolgate\n" +
-		"crosshairsmadagascan\n" +
-		"rideharm\n", "\n")
 }
 
 type GetItemsRequestTime struct {
