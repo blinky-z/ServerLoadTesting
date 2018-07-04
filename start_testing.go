@@ -372,8 +372,8 @@ func sendRequest(path, queryParams, contentType, body string) (statusCode int, r
 	return response.StatusCode, string(responseBytes)
 }
 
-func BuyItems(currentClientNumber int, contentType string, items *[]Item) {
-	for index, currentItem := range *items {
+func BuyItems(currentClientNumber int, contentType string, items []Item) {
+	for index, currentItem := range items {
 		atomic.AddUint32(&totalMessagesCount, 1)
 
 		requestBody, _ := json.Marshal(currentItem)
@@ -422,7 +422,7 @@ func startTestClient(userName, queryParam, contentType, body string, currentClie
 
 			items := parsedResponse.Items
 
-			BuyItems(currentClientNumber, contentType, &items)
+			BuyItems(currentClientNumber, contentType, items)
 		}
 
 		time.Sleep(time.Millisecond * 700)
