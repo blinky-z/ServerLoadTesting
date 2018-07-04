@@ -14,6 +14,8 @@ import (
 	"mime/multipart"
 	"sync/atomic"
 	"net/url"
+	"strings"
+	"math/rand"
 )
 
 var (
@@ -21,6 +23,7 @@ var (
 	logError *log.Logger
 
 	testClientsNum        int
+	testMaxClientsNum 	  int
 	testClientMessagesNum int
 
 	totalMessagesCount uint32
@@ -32,10 +35,12 @@ var (
 	buyItemsRequestTimes []BuyItemsRequestTime
 
 	mux *sync.Mutex
+
+	requestClientNames []string
 )
 
 const (
-	warmUpClientsNum int = 5
+	warmUpClientsNum = 5
 )
 
 type ErrGetItems struct {
@@ -56,13 +61,14 @@ func (err *ErrBuyItems) Error() string {
 	return "[" + err.time.Format("15:04:05") + "] " + err.message
 }
 
-func Init(infoHandle, errorHandle io.Writer, initTestClientsNum, initTestClientMessagesNum int) {
+func Init(infoHandle, errorHandle io.Writer, initTestClientsNum, initMaxClientsNum, initTestClientMessagesNum int) {
 	logInfo = log.New(infoHandle, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 	logError = log.New(errorHandle, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	totalMessagesCount = 0
 
 	testClientsNum = initTestClientsNum
+	testMaxClientsNum = initMaxClientsNum
 	testClientMessagesNum = initTestClientMessagesNum
 
 	getItemsErrors = make([]ErrGetItems, 0)
@@ -72,6 +78,107 @@ func Init(infoHandle, errorHandle io.Writer, initTestClientsNum, initTestClientM
 	buyItemsRequestTimes = make([]BuyItemsRequestTime, 0)
 
 	mux = &sync.Mutex{}
+
+	requestClientNames = strings.Split("intriguegemini\n" +
+		"buggaggle\n" +
+		"denguenull\n" +
+		"jargonformulas\n" +
+		"wrapbasal\n" +
+		"aboundingturtleback\n" +
+		"irishadhesion\n" +
+		"motherseasily\n" +
+		"smoothconstant\n" +
+		"doublingunkindness\n"  +
+		"mewjack\n" +
+		"cagedpresser\n" +
+		"addictedoutspoken\n" +
+		"usurpointment\n" +
+		"packetharlot\n" +
+		"telradcreamed\n" +
+		"infamousjoining\n" +
+		"faceddribbling\n" +
+		"insidecast\n" +
+		"expectantclappin\n" +
+		"orientedindian\n" +
+		"settingcovalent\n" +
+		"satlicker\n" +
+		"driftdeserve\n" +
+		"wheatxpath\n" +
+		"morningtrekking\n" +
+		"throbbinguranus\n" +
+		"torquepopper\n" +
+		"eyepiecetack\n" +
+		"wingedobject\n" +
+		"chondrulebandage\n" +
+		"agendashoot\n" +
+		"cheepingpochard\n" +
+		"themhours\n" +
+		"skinningscottish\n" +
+		"levelbody\n" +
+		"roachurinary\n" +
+		"hurtpeafowl\n" +
+		"ropeapparel\n" +
+		"limitingmars\n" +
+		"blouseendemism\n" +
+		"woozyarcherfish\n" +
+		"glassesradar\n" +
+		"defendedboards\n" +
+		"occupyprism\n" +
+		"linkscone\n" +
+		"economistwombat\n" +
+		"floatingberyllium\n" +
+		"compilerbiking\n" +
+		"italicplacebo\n" +
+		"molecularessential\n" +
+		"twitchoakum\n" +
+		"assertmagnetic\n" +
+		"abscessablaze\n" +
+		"rockyterrine\n" +
+		"plumoseaffirm\n" +
+		"pavermurmer\n" +
+		"equipmentresolving\n" +
+		"decentobeisant\n" +
+		"cauliflowerdwindle\n" +
+		"thalliumwindy\n" +
+		"denebbicycling\n" +
+		"coltfurther\n" +
+		"complainbundevara\n" +
+		"ovalflamboyant\n" +
+		"impureplay\n" +
+		"languagechef\n" +
+		"woofecdysone\n" +
+		"artlessfumbling\n" +
+		"knaveapothem\n" +
+		"golfmagistrate\n" +
+		"bellhoppity\n" +
+		"scholarlyrockers\n" +
+		"listsbilliards\n" +
+		"kentledgegalilei\n" +
+		"mittensdutiful\n" +
+		"deformedcobalt\n" +
+		"reticulumrepeat\n" +
+		"whispersberserk\n" +
+		"knuckleheadsubdural\n" +
+		"melangeusd\n" +
+		"ghostmilder\n" +
+		"tealprune\n" +
+		"execchin\n" +
+		"bullockspride\n" +
+		"curioushexagon\n" +
+		"bawdresources\n" +
+		"liberatedloving\n" +
+		"dismalpassion\n" +
+		"bobolinkhaunting\n" +
+		"satellitetickle\n" +
+		"cepheusshiny\n" +
+		"decoratecurly\n" +
+		"mainsheetknee\n" +
+		"winningindustry\n" +
+		"pufftucana\n" +
+		"tasksscientist\n" +
+		"creepycolgate\n" +
+		"crosshairsmadagascan\n" +
+		"rideharm\n", "\n")
 }
 
 type GetItemsRequestTime struct {
@@ -97,12 +204,12 @@ type Item struct {
 }
 
 func getExpectedGetItemsResponseBody(userName string) string {
-	const defaultGoodsNumber int = 5
+	const defaultGoodsNumber = 5
 
 	responseBody := map[string]interface{}{}
 
 	if userName != "" {
-		var multiplier int = 0
+		var multiplier = 0
 
 		items := make([]Item, len(userName))
 
@@ -122,7 +229,7 @@ func getExpectedGetItemsResponseBody(userName string) string {
 		responseBody["items"] = items
 
 	} else {
-		var multiplier int = 30
+		var multiplier = 30
 
 		items := make([]Item, defaultGoodsNumber)
 
@@ -289,11 +396,11 @@ func BuyItems(currentClientNumber int, contentType string, items *[]Item) {
 	}
 }
 
-func startTestClient(userName, path, queryParam, contentType, body string, currentClientNumber int, wg *sync.WaitGroup) {
+func startTestClient(userName, queryParam, contentType, body string, currentClientNumber int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	for currentMessageNumber := 0; currentMessageNumber < testClientMessagesNum; currentMessageNumber++ {
-		responseStatusCode, responseBody := sendRequest(path, queryParam, contentType, body)
+		responseStatusCode, responseBody := sendRequest("/", queryParam, contentType, body)
 
 		atomic.AddUint32(&totalMessagesCount, 1)
 
@@ -317,12 +424,33 @@ func startTestClient(userName, path, queryParam, contentType, body string, curre
 
 			BuyItems(currentClientNumber, contentType, &items)
 		}
+
+		time.Sleep(time.Millisecond * 700)
 	}
 }
 
+func makeRequestParams(clientName string) (queryParams, contentType, requestBody string) {
+	availableContentTypes := []string{"application/x-www-form-urlencoded", "multipart/form-data"}
+
+	contentType = availableContentTypes[rand.Intn(len(availableContentTypes))]
+
+	if rand.Intn(2) == 1 {
+		queryParams = "name=" + clientName
+	}
+
+	if queryParams == "" {
+		body := map[string]string{"name": clientName}
+		jsonBody, _ := json.Marshal(body)
+
+		requestBody = string(jsonBody)
+	}
+
+	return
+}
+
 func main() {
-	clientsNum, clientsMessagesNum := 20, 10
-	Init(os.Stdout, os.Stderr, clientsNum, clientsMessagesNum)
+	clientsNum, maxClientsNum, clientsMessagesNum := 10, 200, 10
+	Init(os.Stdout, os.Stderr, clientsNum, maxClientsNum, clientsMessagesNum)
 
 	//--------------------
 	//Warm Up A Test Ground
@@ -333,9 +461,11 @@ func main() {
 	for currentClientNumber := 0; currentClientNumber < warmUpClientsNum; currentClientNumber++ {
 		wgWarmUp.Add(1)
 
-		userName, path, queryParams, contentType, requestBody := "", "/", "", "multipart/form-data", ""
+		currentClientName := requestClientNames[rand.Intn(len(requestClientNames))]
 
-		go startTestClient(userName, path, queryParams, contentType, requestBody, currentClientNumber, wgWarmUp)
+		queryParams, contentType, requestBody := makeRequestParams(currentClientName)
+
+		go startTestClient(currentClientName, queryParams, contentType, requestBody, currentClientNumber, wgWarmUp)
 	}
 	time.Sleep(time.Millisecond)
 
@@ -349,58 +479,23 @@ func main() {
 
 	wgTest := &sync.WaitGroup{}
 
-	for currentClientNumber := 0; currentClientNumber < testClientsNum; currentClientNumber++ {
-		wgTest.Add(1)
+	for {
+		if testClientsNum > testMaxClientsNum {
+			break
+		}
 
-		userName, path, queryParams, contentType, requestBody :=
-			"", "/", "", "application/x-www-form-urlencoded", ""
+		for currentClientNumber := 0; currentClientNumber < testClientsNum; currentClientNumber++ {
+			wgTest.Add(1)
 
-		go startTestClient(userName, path, queryParams, contentType, requestBody, currentClientNumber, wgTest)
-	}
+			currentClientName := requestClientNames[rand.Intn(len(requestClientNames))]
 
-	for currentClientNumber := 0; currentClientNumber < testClientsNum; currentClientNumber++ {
-		wgTest.Add(1)
+			queryParams, contentType, requestBody := makeRequestParams(currentClientName)
 
-		userName, path, queryParams, contentType, requestBody :=
-			"", "/", "", "multipart/form-data", ""
+			go startTestClient(currentClientName, queryParams, contentType, requestBody, currentClientNumber, wgTest)
+		}
 
-		go startTestClient(userName, path, queryParams, contentType, requestBody, currentClientNumber, wgTest)
-	}
-
-	for currentClientNumber := 0; currentClientNumber < testClientsNum; currentClientNumber++ {
-		wgTest.Add(1)
-
-		userName, path, queryParams, contentType, requestBody :=
-			"dmitry", "/", "name=dmitry", "application/x-www-form-urlencoded", ""
-
-		go startTestClient(userName, path, queryParams, contentType, requestBody, currentClientNumber, wgTest)
-	}
-
-	for currentClientNumber := 0; currentClientNumber < testClientsNum; currentClientNumber++ {
-		wgTest.Add(1)
-
-		userName, path, queryParams, contentType, requestBody :=
-			"dmitry", "/", "name=dmitry", "multipart/form-data", ""
-
-		go startTestClient(userName, path, queryParams, contentType, requestBody, currentClientNumber, wgTest)
-	}
-
-	for currentClientNumber := 0; currentClientNumber < testClientsNum; currentClientNumber++ {
-		wgTest.Add(1)
-
-		userName, path, queryParams, contentType, requestBody :=
-			"maxim", "/", "", "application/x-www-form-urlencoded", `{"name":"maxim"}`
-
-		go startTestClient(userName, path, queryParams, contentType, requestBody, currentClientNumber, wgTest)
-	}
-
-	for currentClientNumber := 0; currentClientNumber < testClientsNum; currentClientNumber++ {
-		wgTest.Add(1)
-
-		userName, path, queryParams, contentType, requestBody :=
-					"maxim", "/", "", "multipart/form-data", `{"name":"maxim"}`
-
-		go startTestClient(userName, path, queryParams, contentType, requestBody, currentClientNumber, wgTest)
+		time.Sleep(10 * time.Second)
+		testClientsNum += 50
 	}
 
 	wgTest.Wait()
