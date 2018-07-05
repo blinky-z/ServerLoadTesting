@@ -14,6 +14,7 @@ import (
 	"sync/atomic"
 	"net/url"
 	"math/rand"
+	"strings"
 )
 
 var (
@@ -40,10 +41,10 @@ var (
 )
 
 const (
-	serverUrl = "http://185.143.173.31"
+	//serverUrl = "http://185.143.173.31"
+	serverUrl = "http://localhost:8080"
 	warmUpClientsNum = 100
-	testMaxClientsNum = 200
-
+	testMaxClientsNum = 350
 )
 
 type ErrGetItems struct {
@@ -65,6 +66,8 @@ func (err *ErrBuyItems) Error() string {
 }
 
 func Init() {
+	//http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 50000
+
 	totalMessagesCount = 0
 
 	getItemsErrors = make([]ErrGetItems, 0)
@@ -73,17 +76,16 @@ func Init() {
 	getItemsRequestTimes = make([]GetItemsRequestTime, 0)
 	buyItemsRequestTimes = make([]BuyItemsRequestTime, 0)
 
+	// TODO: Сделать для каждого слайса свой mutex
 	mux = &sync.Mutex{}
 }
 
 type GetItemsRequestTime struct {
-	clientsNumberWhileSendingRequest int
 	timeWhileSendingRequest          time.Time
 	elapsedTime                      time.Duration
 }
 
 type BuyItemsRequestTime struct {
-	clientsNumberWhileSendingRequest int
 	timeWhileSendingRequest          time.Time
 	elapsedTime                      time.Duration
 }
@@ -162,6 +164,10 @@ func getExpectedBuyItemResponseBody(itemName string) string {
 func checkBuyItemResponse(requestedItemName, response string, statusCode int) *ErrBuyItems {
 	expectedResponse := getExpectedBuyItemResponseBody(requestedItemName)
 
+	if statusCode == -1 {
+		return nil
+	}
+
 	if statusCode != 200 {
 		return &ErrBuyItems{time : time.Now(), message: "wrong status code"}
 	}
@@ -176,6 +182,10 @@ func checkBuyItemResponse(requestedItemName, response string, statusCode int) *E
 func checkGetItemsResponse(userName, response string, statusCode int) *ErrGetItems {
 	expectedResponse := getExpectedGetItemsResponseBody(userName)
 
+	if statusCode == -1 {
+		return nil
+	}
+
 	if statusCode != 200 {
 		return &ErrGetItems{time : time.Now(), message: "wrong status code"}
 	}
@@ -187,38 +197,49 @@ func checkGetItemsResponse(userName, response string, statusCode int) *ErrGetIte
 	return nil
 }
 
-func sendRequest(path, queryParams, contentType, body string) (statusCode int, responseBody string) {
-	requestUrl := serverUrl + path
+func sendRequest(resource, queryParams, contentType, body string, client *http.Client) (statusCode int, responseBody string) {
+	var request *http.Request
+	var errRequestCreate error
 
 	var response *http.Response
+	var errResponse error
 
 	var sendingStartTime time.Time
 	var sendingEndTime time.Time
-	var clientsNum int
+
+	u, _ := url.ParseRequestURI(serverUrl)
+	u.Path = resource
+	requestUrl := u.String()
 
 	if body == "" {
 		if queryParams != "" {
 			requestUrl += "?" + queryParams
 		}
 
-		sendingStartTime = time.Now()
-		clientsNum = testClientsNum
-
-		response, _ = http.Get(requestUrl)
-
-		sendingEndTime = time.Now()
+		request, errRequestCreate = http.NewRequest("GET", requestUrl, nil)
+		if errRequestCreate != nil {
+			logError.Printf("[Send Request] Unable to create new request with query params. " +
+				"Error: %s", errRequestCreate)
+			return -1, ""
+		}
 	} else {
 		switch contentType {
 		case "application/x-www-form-urlencoded":
-			sendingStartTime = time.Now()
-			clientsNum = testClientsNum
+			data := url.Values{}
+			data.Set("json", body)
 
-			response, _ = http.PostForm(requestUrl, url.Values{"json": {body}})
+			urlEncodedBody := data.Encode()
 
-			sendingEndTime = time.Now()
+			request, errRequestCreate = http.NewRequest("POST", requestUrl, strings.NewReader(urlEncodedBody))
+			if errRequestCreate != nil {
+				logError.Printf("[Send Request] Unable to create new request with urlencoded body. " +
+					"Error: %s", errRequestCreate)
+				return -1, ""
+			}
+
+			request.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+			request.Header.Add("Content-Length", strconv.Itoa(len(urlEncodedBody)))
 		case "multipart/form-data":
-			client := &http.Client{}
-
 			multipartBody := &bytes.Buffer{}
 			writer := multipart.NewWriter(multipartBody)
 
@@ -226,23 +247,31 @@ func sendRequest(path, queryParams, contentType, body string) (statusCode int, r
 
 			writer.Close()
 
-			request, _ := http.NewRequest("POST", requestUrl, multipartBody)
+			request, errRequestCreate = http.NewRequest("POST", requestUrl, multipartBody)
+
+			if errRequestCreate != nil {
+				logError.Printf("[Send Request] Unable to create new request with multipart/form-data body. " +
+					"Error: %s", errRequestCreate)
+				return -1, ""
+			}
+
 			request.Header.Set("Content-Type", writer.FormDataContentType())
-
-			sendingStartTime = time.Now()
-			clientsNum = testClientsNum
-
-			response, _ = client.Do(request)
-
-			sendingEndTime = time.Now()
 		}
 	}
 
-	switch path {
+	sendingStartTime = time.Now()
+	response, errResponse = client.Do(request)
+	sendingEndTime = time.Now()
+
+	if errResponse != nil {
+		logError.Printf("[Send Request] Got error response. Error: %s", errResponse)
+		return -1, ""
+	}
+
+	switch resource {
 	case "/", "":
 		requestTime := GetItemsRequestTime{}
 
-		requestTime.clientsNumberWhileSendingRequest = clientsNum
 		requestTime.timeWhileSendingRequest = sendingStartTime
 		requestTime.elapsedTime = sendingEndTime.Sub(sendingStartTime)
 
@@ -252,7 +281,6 @@ func sendRequest(path, queryParams, contentType, body string) (statusCode int, r
 	case "/buy":
 		requestTime := BuyItemsRequestTime{}
 
-		requestTime.clientsNumberWhileSendingRequest = clientsNum
 		requestTime.timeWhileSendingRequest = sendingStartTime
 		requestTime.elapsedTime = sendingEndTime.Sub(sendingStartTime)
 
@@ -267,13 +295,13 @@ func sendRequest(path, queryParams, contentType, body string) (statusCode int, r
 	return response.StatusCode, string(responseBytes)
 }
 
-func BuyItems(currentClientNumber int, contentType string, items []Item) {
+func BuyItems(currentClientNumber int, contentType string, items []Item, client *http.Client) {
 	for index, currentItem := range items {
 		atomic.AddUint32(&totalMessagesCount, 1)
 
 		requestBody, _ := json.Marshal(currentItem)
 
-		responseStatusCode, responseBody := sendRequest("/buy", "", contentType, string(requestBody))
+		responseStatusCode, responseBody := sendRequest("/buy", "", contentType, string(requestBody), client)
 
 		if resultCheck := checkBuyItemResponse(currentItem.Name, responseBody, responseStatusCode);
 			resultCheck != nil {
@@ -294,8 +322,9 @@ func BuyItems(currentClientNumber int, contentType string, items []Item) {
 func startTestClient(userName, queryParam, contentType, body string, currentClientNumber int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
+	client := &http.Client{}
 	for currentMessageNumber := 0; currentMessageNumber < testClientMessagesNum; currentMessageNumber++ {
-		responseStatusCode, responseBody := sendRequest("/", queryParam, contentType, body)
+		responseStatusCode, responseBody := sendRequest("/", queryParam, contentType, body, client)
 
 		atomic.AddUint32(&totalMessagesCount, 1)
 
@@ -317,7 +346,7 @@ func startTestClient(userName, queryParam, contentType, body string, currentClie
 
 			items := parsedResponse.Items
 
-			BuyItems(currentClientNumber, contentType, items)
+			BuyItems(currentClientNumber, contentType, items, client)
 		}
 
 		time.Sleep(time.Millisecond * 700)
@@ -345,6 +374,7 @@ func makeRequestParams(clientName string) (queryParams, contentType, requestBody
 
 func main() {
 	Init()
+
 	defer logInfoOutfile.Close()
 	defer logErrorOutfile.Close()
 
@@ -392,8 +422,8 @@ func main() {
 				currentClientName, queryParams, contentType, requestBody, currentClientNumber, wgTest)
 		}
 
-		time.Sleep(10 * time.Second)
-		testClientsNum += 50
+		time.Sleep(5 * time.Second)
+		testClientsNum += 20
 		logInfo.Printf("[MAIN] Added new clients. Current clients count: %d", testClientsNum)
 	}
 
