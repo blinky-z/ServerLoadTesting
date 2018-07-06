@@ -44,7 +44,7 @@ const (
 	//serverUrl = "http://185.143.173.31"
 	serverUrl = "http://localhost:8080"
 	warmUpClientsNum = 100
-	testMaxClientsNum = 350
+	testMaxClientsNum = 100
 )
 
 type ErrGetItems struct {
@@ -289,8 +289,8 @@ func sendRequest(resource, queryParams, contentType, body string, client *http.C
 		mux.Unlock()
 	}
 
-	defer response.Body.Close()
 	responseBytes, _ := ioutil.ReadAll(response.Body)
+	defer response.Body.Close()
 
 	return response.StatusCode, string(responseBytes)
 }
@@ -322,7 +322,12 @@ func BuyItems(currentClientNumber int, contentType string, items []Item, client 
 func startTestClient(userName, queryParam, contentType, body string, currentClientNumber int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	client := &http.Client{}
+	tr := &http.Transport{
+		MaxIdleConns:       50,
+		IdleConnTimeout:    30 * time.Second,
+	}
+
+	client := &http.Client{Transport: tr}
 	for currentMessageNumber := 0; currentMessageNumber < testClientMessagesNum; currentMessageNumber++ {
 		responseStatusCode, responseBody := sendRequest("/", queryParam, contentType, body, client)
 
@@ -424,7 +429,7 @@ func main() {
 
 		time.Sleep(5 * time.Second)
 		testClientsNum += 20
-		logInfo.Printf("[MAIN] Added new clients. Current clients count: %d", testClientsNum)
+		logInfo.Printf("[MAIN] New clients was added. Current clients count: %d", testClientsNum)
 	}
 
 	wgTest.Wait()
