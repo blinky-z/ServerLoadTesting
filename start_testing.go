@@ -292,7 +292,7 @@ func sendRequest(resource, queryParams, contentType, body string) (statusCode in
 	}
 
 	responseBytes, _ := ioutil.ReadAll(response.Body)
-	response.Body.Close()
+	defer response.Body.Close()
 
 	return response.StatusCode, string(responseBytes)
 }
