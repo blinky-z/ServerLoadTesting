@@ -37,14 +37,16 @@ var (
 
 	mux *sync.Mutex
 
-	requestClientNames = []string{"saneexclamation","buythroated","infuriatedlutchet","ticketbright","insecureloudmouth","soundingindirect","knowledgewives","gearherring","farmershortcrust","variablehertz","ripplinglens","otherscontrol","turnhotsprings","veincelery","excessfamily","iceskatesbale","ruffsescape","pencilelements","yellstable","mushroomslomo","edgecord","possessivegreeting","hertzodds","groaninfected","interiorrotating","firechargeenzyme","sickshower","leukocytedrink","prominencetub","fieldsmustache","woodcocklawful","leatherarmy","achernarinstance","europalepton","planesalami","customersworkbench","infinityhatching","plughumbug","competingfag","farrumscut","perpetualfallen","unwittinglaying","dirtycopernicium","icehockeymeteoroid","merseybeatstarbucks","milkperoxide","flingwater","flagrantcoins","kraftzing","fellsargon","bobstaysloshed","trymercury","freegantonic","barnacleburnt","masonsstrawberry","delayedmale","xiphoidtutor","asheatable","tengmalmshingles","aquilabummage","spotsbiceps","violinanother","tawnysyntax","frogsfeisty","nodulespity","calledpliocene","soddinggluttonous","billowygillette","stuffboson","collarbonelargest","parliamentblizzard","sadmarkings","streetsbailey","surfernissan","democracydividers","alloythine","frugalmust","plancaplay","normalaleutian","stingandalusian","skuaallee","intendedshark","paradigmboards","ventureskeg","kalmansledder","plaindolphin","singermention","employvolta","womenthorough","huhshare","grumpycepheus","magnetremuda","moralsdisrupt","correctfierce","rollmetrics","skeinboiling","amiablebiotic","actmind","baconsiphon","complexvenison"}
+	myClient *http.Client
+
+	requestClientNames = []string{"", "saneexclamation","buythroated","infuriatedlutchet","ticketbright","insecureloudmouth","soundingindirect","knowledgewives","gearherring","farmershortcrust","variablehertz","ripplinglens","otherscontrol","turnhotsprings","veincelery","excessfamily","iceskatesbale","ruffsescape","pencilelements","yellstable","mushroomslomo","edgecord","possessivegreeting","hertzodds","groaninfected","interiorrotating","firechargeenzyme","sickshower","leukocytedrink","prominencetub","fieldsmustache","woodcocklawful","leatherarmy","achernarinstance","europalepton","planesalami","customersworkbench","infinityhatching","plughumbug","competingfag","farrumscut","perpetualfallen","unwittinglaying","dirtycopernicium","icehockeymeteoroid","merseybeatstarbucks","milkperoxide","flingwater","flagrantcoins","kraftzing","fellsargon","bobstaysloshed","trymercury","freegantonic","barnacleburnt","masonsstrawberry","delayedmale","xiphoidtutor","asheatable","tengmalmshingles","aquilabummage","spotsbiceps","violinanother","tawnysyntax","frogsfeisty","nodulespity","calledpliocene","soddinggluttonous","billowygillette","stuffboson","collarbonelargest","parliamentblizzard","sadmarkings","streetsbailey","surfernissan","democracydividers","alloythine","frugalmust","plancaplay","normalaleutian","stingandalusian","skuaallee","intendedshark","paradigmboards","ventureskeg","kalmansledder","plaindolphin","singermention","employvolta","womenthorough","huhshare","grumpycepheus","magnetremuda","moralsdisrupt","correctfierce","rollmetrics","skeinboiling","amiablebiotic","actmind","baconsiphon","complexvenison"}
 )
 
 const (
 	//serverUrl = "http://185.143.173.31"
 	serverUrl = "http://localhost:8080"
 	warmUpClientsNum = 100
-	testMaxClientsNum = 100
+	testMaxClientsNum = 500
 )
 
 type ErrGetItems struct {
@@ -197,7 +199,7 @@ func checkGetItemsResponse(userName, response string, statusCode int) *ErrGetIte
 	return nil
 }
 
-func sendRequest(resource, queryParams, contentType, body string, client *http.Client) (statusCode int, responseBody string) {
+func sendRequest(resource, queryParams, contentType, body string) (statusCode int, responseBody string) {
 	var request *http.Request
 	var errRequestCreate error
 
@@ -260,7 +262,7 @@ func sendRequest(resource, queryParams, contentType, body string, client *http.C
 	}
 
 	sendingStartTime = time.Now()
-	response, errResponse = client.Do(request)
+	response, errResponse = myClient.Do(request)
 	sendingEndTime = time.Now()
 
 	if errResponse != nil {
@@ -290,18 +292,18 @@ func sendRequest(resource, queryParams, contentType, body string, client *http.C
 	}
 
 	responseBytes, _ := ioutil.ReadAll(response.Body)
-	defer response.Body.Close()
+	response.Body.Close()
 
 	return response.StatusCode, string(responseBytes)
 }
 
-func BuyItems(currentClientNumber int, contentType string, items []Item, client *http.Client) {
+func BuyItems(currentClientNumber int, contentType string, items []Item) {
 	for index, currentItem := range items {
 		atomic.AddUint32(&totalMessagesCount, 1)
 
 		requestBody, _ := json.Marshal(currentItem)
 
-		responseStatusCode, responseBody := sendRequest("/buy", "", contentType, string(requestBody), client)
+		responseStatusCode, responseBody := sendRequest("/buy", "", contentType, string(requestBody))
 
 		if resultCheck := checkBuyItemResponse(currentItem.Name, responseBody, responseStatusCode);
 			resultCheck != nil {
@@ -322,14 +324,8 @@ func BuyItems(currentClientNumber int, contentType string, items []Item, client 
 func startTestClient(userName, queryParam, contentType, body string, currentClientNumber int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	tr := &http.Transport{
-		MaxIdleConns:       50,
-		IdleConnTimeout:    30 * time.Second,
-	}
-
-	client := &http.Client{Transport: tr}
 	for currentMessageNumber := 0; currentMessageNumber < testClientMessagesNum; currentMessageNumber++ {
-		responseStatusCode, responseBody := sendRequest("/", queryParam, contentType, body, client)
+		responseStatusCode, responseBody := sendRequest("/", queryParam, contentType, body)
 
 		atomic.AddUint32(&totalMessagesCount, 1)
 
@@ -351,7 +347,7 @@ func startTestClient(userName, queryParam, contentType, body string, currentClie
 
 			items := parsedResponse.Items
 
-			BuyItems(currentClientNumber, contentType, items, client)
+			BuyItems(currentClientNumber, contentType, items)
 		}
 
 		time.Sleep(time.Millisecond * 700)
@@ -363,15 +359,17 @@ func makeRequestParams(clientName string) (queryParams, contentType, requestBody
 
 	contentType = availableContentTypes[rand.Intn(len(availableContentTypes))]
 
-	if rand.Intn(2) == 1 {
-		queryParams = "name=" + clientName
-	}
+	if clientName != "" {
+		if rand.Intn(2) == 1 {
+			queryParams = "name=" + clientName
+		}
 
-	if queryParams == "" {
-		body := map[string]string{"name": clientName}
-		jsonBody, _ := json.Marshal(body)
+		if queryParams == "" {
+			body := map[string]string{"name": clientName}
+			jsonBody, _ := json.Marshal(body)
 
-		requestBody = string(jsonBody)
+			requestBody = string(jsonBody)
+		}
 	}
 
 	return
@@ -379,6 +377,16 @@ func makeRequestParams(clientName string) (queryParams, contentType, requestBody
 
 func main() {
 	Init()
+
+	defaultRoundTripper := http.DefaultTransport
+	defaultTransportPointer, _ := defaultRoundTripper.(*http.Transport)
+
+	defaultTransport := *defaultTransportPointer // dereference it to get a copy of the struct that the pointer points to
+	defaultTransport.MaxIdleConns = 500000
+	defaultTransport.MaxIdleConnsPerHost = 500000
+	defaultTransport.IdleConnTimeout = 1 * time.Second
+
+	myClient = &http.Client{Transport: &defaultTransport}
 
 	defer logInfoOutfile.Close()
 	defer logErrorOutfile.Close()
@@ -428,7 +436,7 @@ func main() {
 		}
 
 		time.Sleep(5 * time.Second)
-		testClientsNum += 20
+		testClientsNum += 50
 		logInfo.Printf("[MAIN] New clients was added. Current clients count: %d", testClientsNum)
 	}
 
