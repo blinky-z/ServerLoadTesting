@@ -264,6 +264,7 @@ func sendRequest(resource, queryParams, contentType, body string) (statusCode in
 	sendingStartTime = time.Now()
 	response, errResponse = myClient.Do(request)
 	sendingEndTime = time.Now()
+	defer response.Body.Close()
 
 	if errResponse != nil {
 		logError.Printf("[Send Request] Got error response. Error: %s", errResponse)
@@ -292,8 +293,6 @@ func sendRequest(resource, queryParams, contentType, body string) (statusCode in
 	}
 
 	responseBytes, _ := ioutil.ReadAll(response.Body)
-	defer response.Body.Close()
-
 	return response.StatusCode, string(responseBytes)
 }
 
