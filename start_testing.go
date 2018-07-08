@@ -160,7 +160,9 @@ func getExpectedBuyItemsResponse(itemName string) string {
 	return string(jsonBody)
 }
 
-func checkResponse(objectName, response string, statusCode int, getExpectedResponse func(objectName string) string) *ErrResponse {
+func checkResponse(
+	objectName, response string, statusCode int, getExpectedResponse func(objectName string) string) *ErrResponse {
+
 	expectedResponse := getExpectedResponse(objectName)
 
 	if statusCode != 200 {
