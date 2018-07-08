@@ -34,8 +34,8 @@ var (
 	getItemsErrors []ErrGetItems
 	buyItemsErrors []ErrBuyItems
 
-	getItemsRequestTimes []GetItemsRequestTime
-	buyItemsRequestTimes []BuyItemsRequestTime
+	getItemsRequestTimeSlice []ResponseTime
+	buyItemsRequestTimeSlice []ResponseTime
 
 	// TODO: Сделать несколько мутексов для разных слайсов
 	mux *sync.Mutex
@@ -49,7 +49,7 @@ const (
 	serverUrl = "http://185.143.173.31"
 	//serverUrl = "http://localhost:8080"
 	warmUpClientsNum = 100
-	testMaxClientsNum = 400
+	testMaxClientsNum = 300
 )
 
 type ErrGetItems struct {
@@ -76,19 +76,14 @@ func Init() {
 	getItemsErrors = make([]ErrGetItems, 0)
 	buyItemsErrors = make([]ErrBuyItems, 0)
 
-	getItemsRequestTimes = make([]GetItemsRequestTime, 0)
-	buyItemsRequestTimes = make([]BuyItemsRequestTime, 0)
+	getItemsRequestTimeSlice = make([]ResponseTime, 0)
+	buyItemsRequestTimeSlice = make([]ResponseTime, 0)
 
 	// TODO: Сделать для каждого слайса свой mutex
 	mux = &sync.Mutex{}
 }
 
-type GetItemsRequestTime struct {
-	timeWhileSendingRequest          time.Time
-	elapsedTime                      time.Duration
-}
-
-type BuyItemsRequestTime struct {
+type ResponseTime struct {
 	timeWhileSendingRequest          time.Time
 	elapsedTime                      time.Duration
 }
@@ -267,22 +262,22 @@ func sendRequest(resource, queryParams, contentType, body string) (statusCode in
 
 	switch resource {
 	case "/", "":
-		requestTime := GetItemsRequestTime{}
+		requestTime := ResponseTime{}
 
 		requestTime.timeWhileSendingRequest = sendingStartTime
 		requestTime.elapsedTime = sendingEndTime.Sub(sendingStartTime)
 
 		mux.Lock()
-		getItemsRequestTimes = append(getItemsRequestTimes, requestTime)
+		getItemsRequestTimeSlice = append(getItemsRequestTimeSlice, requestTime)
 		mux.Unlock()
 	case "/buy":
-		requestTime := BuyItemsRequestTime{}
+		requestTime := ResponseTime{}
 
 		requestTime.timeWhileSendingRequest = sendingStartTime
 		requestTime.elapsedTime = sendingEndTime.Sub(sendingStartTime)
 
 		mux.Lock()
-		buyItemsRequestTimes = append(buyItemsRequestTimes, requestTime)
+		buyItemsRequestTimeSlice = append(buyItemsRequestTimeSlice, requestTime)
 		mux.Unlock()
 	}
 
@@ -452,8 +447,8 @@ func main() {
 	//Load Tests with a large number of request from each client
 	//--------------------
 
-	getItemsRequestTimes = nil
-	buyItemsRequestTimes = nil
+	getItemsRequestTimeSlice = nil
+	buyItemsRequestTimeSlice = nil
 	getItemsErrors = nil
 	buyItemsErrors = nil
 	totalMessagesCount = 0
@@ -488,14 +483,16 @@ func showStat() {
 		"%d errors occurred during get items tests, %d errors occurred during buy items tests",
 		len(getItemsErrors), len(buyItemsErrors))
 
+	averageResponseTime := getAverageResponseTime(getItemsRequestTimeSlice)
+	logStat.Printf("Average response time: %d", averageResponseTime)
+}
 
+func getAverageResponseTime(timeSlice []ResponseTime) time.Duration {
+	var totalTime time.Duration
 
+	for _, currentResponseTime := range timeSlice {
+		totalTime += currentResponseTime.elapsedTime
+	}
 
-
-
-
-
-
-
-
+	return totalTime / time.Duration(len(timeSlice))
 }
