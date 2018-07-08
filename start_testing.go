@@ -83,8 +83,8 @@ func Init() {
 	defaultTransportPointer, _ := defaultRoundTripper.(*http.Transport)
 
 	defaultTransport := *defaultTransportPointer
-	defaultTransport.MaxIdleConns = 400000
-	defaultTransport.MaxIdleConnsPerHost = 400000
+	defaultTransport.MaxIdleConns = 10000
+	defaultTransport.MaxIdleConnsPerHost = 10000
 
 	myClient = &http.Client{Transport: &defaultTransport}
 }
@@ -363,6 +363,8 @@ func main() {
 
 	wgWarmUp := &sync.WaitGroup{}
 
+	logStat.Print("Warm Up is started")
+
 	for currentClientNumber := 0; currentClientNumber < warmUpClientsNum; currentClientNumber++ {
 		wgWarmUp.Add(1)
 
@@ -374,11 +376,9 @@ func main() {
 		go startTestClient(
 			currentClientName, queryParams, contentType, requestBody, currentClientNumber, wgWarmUp, sendDelay)
 	}
-	time.Sleep(time.Millisecond)
-
 	wgWarmUp.Wait()
 
-	logStat.Println("[MAIN] Warm up has been done")
+	logStat.Print("[MAIN] Warm up has been done")
 
 	resetTestGround()
 	//--------------------
@@ -477,10 +477,10 @@ func showTimeSliceStat(timeSlice []ResponseTime) {
 		func(i, j int) bool { return timeSlice[i].elapsedTime < timeSlice[j].elapsedTime })
 
 	averageGetItemsResponseTime := findAverageResponseTime(timeSlice).Seconds()
-	logStat.Printf("Average response time: %f", averageGetItemsResponseTime)
+	logStat.Printf("Average response time: %f seсonds", averageGetItemsResponseTime)
 
 	getItemsResponseTimeMedian := findTimeMedian(timeSlice).Seconds()
-	logStat.Printf("Response time median: %f", getItemsResponseTimeMedian)
+	logStat.Printf("Response time median: %f seconds", getItemsResponseTimeMedian)
 }
 
 func findTimeMedian(timeSlice []ResponseTime) time.Duration {
