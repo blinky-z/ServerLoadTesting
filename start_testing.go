@@ -296,7 +296,7 @@ func BuyItems(currentClientNumber int, contentType string, items []Item) {
 	}
 }
 
-func startTestClient(userName, queryParam, contentType, body string, currentClientNumber int, wg *sync.WaitGroup) {
+func startTestClient(userName, queryParam, contentType, body string, currentClientNumber int, wg *sync.WaitGroup, sendDelay time.Duration) {
 	defer wg.Done()
 
 	for currentMessageNumber := 0; currentMessageNumber < testClientMessagesNum; currentMessageNumber++ {
@@ -325,7 +325,7 @@ func startTestClient(userName, queryParam, contentType, body string, currentClie
 			BuyItems(currentClientNumber, contentType, items)
 		}
 
-		time.Sleep(time.Millisecond * 700)
+		time.Sleep(sendDelay)
 	}
 }
 
@@ -355,6 +355,7 @@ func main() {
 
 	defer logInfoOutfile.Close()
 	defer logErrorOutfile.Close()
+	defer logStatOutfile.Close()
 
 	//--------------------
 	//Warm Up A Test Ground
@@ -368,8 +369,10 @@ func main() {
 		currentClientName := requestClientNames[rand.Intn(len(requestClientNames))]
 
 		queryParams, contentType, requestBody := makeRequestParams(currentClientName)
+		sendDelay := time.Duration(time.Millisecond * 700)
 
-		go startTestClient(currentClientName, queryParams, contentType, requestBody, currentClientNumber, wgWarmUp)
+		go startTestClient(
+			currentClientName, queryParams, contentType, requestBody, currentClientNumber, wgWarmUp, sendDelay)
 	}
 	time.Sleep(time.Millisecond)
 
@@ -384,21 +387,23 @@ func main() {
 
 	wgTest := &sync.WaitGroup{}
 
+	logStat.Print("[MAIN] Load tests with a large number of clients has been started")
+
 	for {
 		if testClientsNum > testMaxClientsNum {
 			logInfo.Printf("[MAIN] Reached clients limit. Stopping creating new clients...")
 			break
 		}
-
 		for currentClientNumber := 0; currentClientNumber < testClientsNum; currentClientNumber++ {
 			wgTest.Add(1)
 
 			currentClientName := requestClientNames[rand.Intn(len(requestClientNames))]
 
 			queryParams, contentType, requestBody := makeRequestParams(currentClientName)
+			sendDelay := time.Duration(time.Millisecond * 700)
 
 			go startTestClient(
-				currentClientName, queryParams, contentType, requestBody, currentClientNumber, wgTest)
+				currentClientName, queryParams, contentType, requestBody, currentClientNumber, wgTest, sendDelay)
 		}
 
 		time.Sleep(5 * time.Second)
@@ -419,8 +424,10 @@ func main() {
 	//Load Tests with a large number of request from each client
 	//--------------------
 
-	testClientsNum = 4
+	testClientsNum = 16
 	testClientMessagesNum = 500
+
+	logStat.Print("[MAIN] Load tests with a large number of requests from each client has been started")
 
 	for currentClientNumber := 0; currentClientNumber < testClientsNum; currentClientNumber++ {
 		wgTest.Add(1)
@@ -428,9 +435,10 @@ func main() {
 		currentClientName := requestClientNames[rand.Intn(len(requestClientNames))]
 
 		queryParams, contentType, requestBody := makeRequestParams(currentClientName)
+		sendDelay := time.Duration(time.Millisecond * 200)
 
 		go startTestClient(
-			currentClientName, queryParams, contentType, requestBody, currentClientNumber, wgTest)
+			currentClientName, queryParams, contentType, requestBody, currentClientNumber, wgTest, sendDelay)
 	}
 
 	wgTest.Wait()
@@ -468,11 +476,11 @@ func showTimeSliceStat(timeSlice []ResponseTime) {
 	sort.Slice(timeSlice,
 		func(i, j int) bool { return timeSlice[i].elapsedTime < timeSlice[j].elapsedTime })
 
-	averageGetItemsResponseTime := findAverageResponseTime(timeSlice)
-	logStat.Printf("Average response time: %d", averageGetItemsResponseTime)
+	averageGetItemsResponseTime := findAverageResponseTime(timeSlice).Seconds()
+	logStat.Printf("Average response time: %f", averageGetItemsResponseTime)
 
-	getItemsResponseTimeMedian := findTimeMedian(timeSlice)
-	logStat.Printf("Response time median: %d", getItemsResponseTimeMedian)
+	getItemsResponseTimeMedian := findTimeMedian(timeSlice).Seconds()
+	logStat.Printf("Response time median: %f", getItemsResponseTimeMedian)
 }
 
 func findTimeMedian(timeSlice []ResponseTime) time.Duration {
