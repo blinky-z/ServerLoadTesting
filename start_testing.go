@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"math/rand"
 	"strings"
+	"sort"
 )
 
 var (
@@ -31,8 +32,8 @@ var (
 
 	totalMessagesCount uint32
 
-	getItemsErrors []ErrGetItems
-	buyItemsErrors []ErrBuyItems
+	getItemsErrors []ErrResponse
+	buyItemsErrors []ErrResponse
 
 	getItemsRequestTimeSlice []ResponseTime
 	buyItemsRequestTimeSlice []ResponseTime
@@ -52,35 +53,35 @@ const (
 	testMaxClientsNum = 300
 )
 
-type ErrGetItems struct {
+type ErrResponse struct {
 	time time.Time
 	message string
 }
 
-type ErrBuyItems struct {
-	time time.Time
-	message string
-}
-
-func (err *ErrGetItems) Error() string {
-	return "[" + err.time.Format("15:04:05") + "] " + err.message
-}
-
-func (err *ErrBuyItems) Error() string {
+func (err *ErrResponse) Error() string {
 	return "[" + err.time.Format("15:04:05") + "] " + err.message
 }
 
 func Init() {
 	totalMessagesCount = 0
 
-	getItemsErrors = make([]ErrGetItems, 0)
-	buyItemsErrors = make([]ErrBuyItems, 0)
+	getItemsErrors = make([]ErrResponse, 0)
+	buyItemsErrors = make([]ErrResponse, 0)
 
 	getItemsRequestTimeSlice = make([]ResponseTime, 0)
 	buyItemsRequestTimeSlice = make([]ResponseTime, 0)
 
 	// TODO: Сделать для каждого слайса свой mutex
 	mux = &sync.Mutex{}
+
+	defaultRoundTripper := http.DefaultTransport
+	defaultTransportPointer, _ := defaultRoundTripper.(*http.Transport)
+
+	defaultTransport := *defaultTransportPointer
+	defaultTransport.MaxIdleConns = 400000
+	defaultTransport.MaxIdleConnsPerHost = 400000
+
+	myClient = &http.Client{Transport: &defaultTransport}
 }
 
 type ResponseTime struct {
@@ -98,7 +99,7 @@ type Item struct {
 	Price string `json:"price"`
 }
 
-func getExpectedGetItemsResponseBody(userName string) string {
+func getExpectedGetItemsResponse(userName string) string {
 	const defaultGoodsNumber = 5
 
 	responseBody := map[string]interface{}{}
@@ -143,7 +144,7 @@ func getExpectedGetItemsResponseBody(userName string) string {
 	return string(jsonBody)
 }
 
-func getExpectedBuyItemResponseBody(itemName string) string {
+func getExpectedBuyItemsResponse(itemName string) string {
 	responseBody := map[string]interface{}{}
 
 	successPurchaseMessage := "success"
@@ -159,29 +160,18 @@ func getExpectedBuyItemResponseBody(itemName string) string {
 	return string(jsonBody)
 }
 
-func checkBuyItemResponse(requestedItemName, response string, statusCode int) *ErrBuyItems {
-	expectedResponse := getExpectedBuyItemResponseBody(requestedItemName)
+func checkResponse(objectName, response string, statusCode int, getExpectedResponse func (objectName string) string) *ErrResponse {
+	expectedResponse := getExpectedResponse(objectName)
 
 	if statusCode != 200 {
-		return &ErrBuyItems{time : time.Now(), message: "wrong status code"}
+		if statusCode == -1 {
+			return &ErrResponse{time : time.Now(), message: "bad response"}
+		}
+		return &ErrResponse{time : time.Now(), message: "wrong status code"}
 	}
 
 	if response != expectedResponse {
-		return &ErrBuyItems{time : time.Now(), message: "wrong response body"}
-	}
-
-	return nil
-}
-
-func checkGetItemsResponse(userName, response string, statusCode int) *ErrGetItems {
-	expectedResponse := getExpectedGetItemsResponseBody(userName)
-
-	if statusCode != 200 {
-		return &ErrGetItems{time : time.Now(), message: "wrong status code"}
-	}
-
-	if response != expectedResponse {
-		return &ErrGetItems{time : time.Now(), message: "wrong response body"}
+		return &ErrResponse{time : time.Now(), message: "wrong response body"}
 	}
 
 	return nil
@@ -253,6 +243,10 @@ func sendRequest(resource, queryParams, contentType, body string) (statusCode in
 	response, errResponse = myClient.Do(request)
 	sendingEndTime = time.Now()
 
+	requestTime := ResponseTime{}
+	requestTime.timeWhileSendingRequest = sendingStartTime
+	requestTime.elapsedTime = sendingEndTime.Sub(sendingStartTime)
+
 	if errResponse != nil {
 		logError.Printf("[Send Request] Got error response. Error: %s", errResponse)
 		return -1, ""
@@ -261,21 +255,11 @@ func sendRequest(resource, queryParams, contentType, body string) (statusCode in
 	defer response.Body.Close()
 
 	switch resource {
-	case "/", "":
-		requestTime := ResponseTime{}
-
-		requestTime.timeWhileSendingRequest = sendingStartTime
-		requestTime.elapsedTime = sendingEndTime.Sub(sendingStartTime)
-
+	case "/":
 		mux.Lock()
 		getItemsRequestTimeSlice = append(getItemsRequestTimeSlice, requestTime)
 		mux.Unlock()
 	case "/buy":
-		requestTime := ResponseTime{}
-
-		requestTime.timeWhileSendingRequest = sendingStartTime
-		requestTime.elapsedTime = sendingEndTime.Sub(sendingStartTime)
-
 		mux.Lock()
 		buyItemsRequestTimeSlice = append(buyItemsRequestTimeSlice, requestTime)
 		mux.Unlock()
@@ -293,7 +277,7 @@ func BuyItems(currentClientNumber int, contentType string, items []Item) {
 
 		responseStatusCode, responseBody := sendRequest("/buy", "", contentType, string(requestBody))
 
-		if resultCheck := checkBuyItemResponse(currentItem.Name, responseBody, responseStatusCode);
+		if resultCheck := checkResponse(currentItem.Name, responseBody, responseStatusCode, getExpectedBuyItemsResponse);
 			resultCheck != nil {
 
 			logError.Printf("[Goroutine %d][Message %d][Buy Items Test] Got invalid response. "+
@@ -317,7 +301,7 @@ func startTestClient(userName, queryParam, contentType, body string, currentClie
 
 		atomic.AddUint32(&totalMessagesCount, 1)
 
-		if resultCheck := checkGetItemsResponse(userName, responseBody, responseStatusCode);
+		if resultCheck := checkResponse(userName, responseBody, responseStatusCode, getExpectedGetItemsResponse);
 			resultCheck != nil {
 
 			logError.Printf("[Goroutine %d][Message %d][Get Items Test] Got invalid response. "+
@@ -366,15 +350,6 @@ func makeRequestParams(clientName string) (queryParams, contentType, requestBody
 func main() {
 	Init()
 
-	defaultRoundTripper := http.DefaultTransport
-	defaultTransportPointer, _ := defaultRoundTripper.(*http.Transport)
-
-	defaultTransport := *defaultTransportPointer
-	defaultTransport.MaxIdleConns = 400000
-	defaultTransport.MaxIdleConnsPerHost = 400000
-
-	myClient = &http.Client{Transport: &defaultTransport}
-
 	defer logInfoOutfile.Close()
 	defer logErrorOutfile.Close()
 
@@ -399,6 +374,7 @@ func main() {
 
 	logStat.Println("[MAIN] Warm up has been done")
 
+	resetTestGround()
 	//--------------------
 	//Load Tests with a large number of clients
 	//--------------------
@@ -431,27 +407,14 @@ func main() {
 
 	//--------------------
 
-	logStat.Printf("[MAIN] Load tests with a large number of clients has been done. Sended requests count: %d. "+
-		"Error statistics: %d errors occured during get items tests, %d errors occured during buy items tests",
-		totalMessagesCount, len(getItemsErrors), len(buyItemsErrors))
-
-	// close all connections before next test
-	logStat.Print("[MAIN Waiting for closing connections...")
-	time.Sleep(defaultTransport.IdleConnTimeout)
-	logStat.Print("[MAIN All connecctions has been closed")
-
-	logStat.Print("[MAIN] Load tests with a large number of clients time statistics: ")
+	logStat.Print("[MAIN] Load tests with a large number of clients has been done")
+	logStat.Print("[MAIN] Load tests with a large number of clients statistics: ")
 	showStat()
 
+	resetTestGround()
 	//--------------------
 	//Load Tests with a large number of request from each client
 	//--------------------
-
-	getItemsRequestTimeSlice = nil
-	buyItemsRequestTimeSlice = nil
-	getItemsErrors = nil
-	buyItemsErrors = nil
-	totalMessagesCount = 0
 
 	testClientsNum = 4
 	testClientMessagesNum = 500
@@ -476,18 +439,48 @@ func main() {
 	showStat()
 }
 
+func resetTestGround() {
+	getItemsRequestTimeSlice = nil
+	buyItemsRequestTimeSlice = nil
+	getItemsErrors = nil
+	buyItemsErrors = nil
+	totalMessagesCount = 0
+}
+
 func showStat() {
 	logStat.Printf("Sent requests count: %d. ", totalMessagesCount)
 
-	logStat.Printf("Error statistics: " +
+	logStat.Printf("Error statistics: "+
 		"%d errors occurred during get items tests, %d errors occurred during buy items tests",
 		len(getItemsErrors), len(buyItemsErrors))
 
-	averageResponseTime := getAverageResponseTime(getItemsRequestTimeSlice)
-	logStat.Printf("Average response time: %d", averageResponseTime)
+	logStat.Print("Get items responses statistics: ")
+	showTimeSliceStat(getItemsRequestTimeSlice)
+
+	logStat.Print("Buy items responses statistics: ")
+	showTimeSliceStat(buyItemsRequestTimeSlice)
 }
 
-func getAverageResponseTime(timeSlice []ResponseTime) time.Duration {
+func showTimeSliceStat(timeSlice []ResponseTime) {
+	sort.Slice(timeSlice,
+		func(i, j int) bool { return timeSlice[i].elapsedTime < timeSlice[j].elapsedTime })
+
+	averageGetItemsResponseTime := findAverageResponseTime(timeSlice)
+	logStat.Printf("Average response time: %d", averageGetItemsResponseTime)
+
+	getItemsResponseTimeMedian := findTimeMedian(timeSlice)
+	logStat.Printf("Response time median: %d", getItemsResponseTimeMedian)
+}
+
+func findTimeMedian(timeSlice []ResponseTime) time.Duration {
+	if len(timeSlice) % 2 != 0 {
+		return timeSlice[(len(timeSlice) + 1) / 2].elapsedTime
+	} else {
+		return (timeSlice[len(timeSlice) / 2].elapsedTime + timeSlice[len(timeSlice) / 2 + 1].elapsedTime) / 2
+	}
+}
+
+func findAverageResponseTime(timeSlice []ResponseTime) time.Duration {
 	var totalTime time.Duration
 
 	for _, currentResponseTime := range timeSlice {
