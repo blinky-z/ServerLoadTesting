@@ -33,13 +33,18 @@ var (
 	totalMessagesCount uint32
 
 	getItemsErrors []ErrResponse
+	muxGetItemsErrors *sync.Mutex
 	buyItemsErrors []ErrResponse
+	muxBuyItemsErrors *sync.Mutex
 
-	getItemsRequestTimeSlice []ResponseTime
-	buyItemsRequestTimeSlice []ResponseTime
+	getItemsResponseTimeSlice    []ResponseTime
+	muxGetItemsResponseTimeSlice *sync.Mutex
+	buyItemsResponseTimeSlice    []ResponseTime
+	muxBuyItemsResponseTimeSlice *sync.Mutex
 
-	// TODO: Сделать несколько мутексов для разных слайсов
 	mux *sync.Mutex
+
+	requestsClientsNum map[time.Time]uint32
 
 	myClient *http.Client
 
@@ -50,7 +55,7 @@ const (
 	serverUrl = "http://185.143.173.31"
 	//serverUrl = "http://localhost:8080"
 	warmUpClientsNum  = 100
-	testMaxClientsNum = 300
+	testMaxClientsNum = 250
 )
 
 type ResponseTime struct {
@@ -73,18 +78,23 @@ func Init() {
 	getItemsErrors = make([]ErrResponse, 0)
 	buyItemsErrors = make([]ErrResponse, 0)
 
-	getItemsRequestTimeSlice = make([]ResponseTime, 0)
-	buyItemsRequestTimeSlice = make([]ResponseTime, 0)
+	getItemsResponseTimeSlice = make([]ResponseTime, 0)
+	buyItemsResponseTimeSlice = make([]ResponseTime, 0)
 
-	// TODO: Сделать для каждого слайса свой mutex
+	muxGetItemsErrors = &sync.Mutex{}
+	muxBuyItemsErrors = &sync.Mutex{}
+	muxGetItemsResponseTimeSlice = &sync.Mutex{}
+	muxBuyItemsResponseTimeSlice = &sync.Mutex{}
 	mux = &sync.Mutex{}
+
+	requestsClientsNum = make(map[time.Time]uint32)
 
 	defaultRoundTripper := http.DefaultTransport
 	defaultTransportPointer, _ := defaultRoundTripper.(*http.Transport)
 
 	defaultTransport := *defaultTransportPointer
-	defaultTransport.MaxIdleConns = 10000
-	defaultTransport.MaxIdleConnsPerHost = 10000
+	defaultTransport.MaxIdleConns = 5000
+	defaultTransport.MaxIdleConnsPerHost = 5000
 
 	myClient = &http.Client{Transport: &defaultTransport}
 }
@@ -245,9 +255,9 @@ func sendRequest(resource, queryParams, contentType, body string) (statusCode in
 	response, errResponse = myClient.Do(request)
 	sendingEndTime = time.Now()
 
-	requestTime := ResponseTime{}
-	requestTime.timeWhileSendingRequest = sendingStartTime
-	requestTime.elapsedTime = sendingEndTime.Sub(sendingStartTime)
+	responseTime := ResponseTime{}
+	responseTime.timeWhileSendingRequest = sendingStartTime
+	responseTime.elapsedTime = sendingEndTime.Sub(sendingStartTime)
 
 	if errResponse != nil {
 		logError.Printf("[Send Request] Got error response. Error: %s", errResponse)
@@ -258,13 +268,13 @@ func sendRequest(resource, queryParams, contentType, body string) (statusCode in
 
 	switch resource {
 	case "/":
-		mux.Lock()
-		getItemsRequestTimeSlice = append(getItemsRequestTimeSlice, requestTime)
-		mux.Unlock()
+		muxGetItemsResponseTimeSlice.Lock()
+		getItemsResponseTimeSlice = append(getItemsResponseTimeSlice, responseTime)
+		muxGetItemsResponseTimeSlice.Unlock()
 	case "/buy":
-		mux.Lock()
-		buyItemsRequestTimeSlice = append(buyItemsRequestTimeSlice, requestTime)
-		mux.Unlock()
+		muxBuyItemsResponseTimeSlice.Lock()
+		buyItemsResponseTimeSlice = append(buyItemsResponseTimeSlice, responseTime)
+		muxBuyItemsResponseTimeSlice.Unlock()
 	}
 
 	responseBytes, _ := ioutil.ReadAll(response.Body)
@@ -286,9 +296,9 @@ func BuyItems(currentClientNumber int, contentType string, items []Item) {
 			logError.Printf("[Goroutine %d][Message %d][Buy Items Test] Got invalid response. "+
 				"Error Message: %s", currentClientNumber, index, resultCheck)
 
-			mux.Lock()
+			muxBuyItemsErrors.Lock()
 			buyItemsErrors = append(buyItemsErrors, *resultCheck)
-			mux.Unlock()
+			muxBuyItemsErrors.Unlock()
 		} else {
 			logInfo.Printf("[Goroutine %d][Message %d][Buy Items Test] Got valid response",
 				currentClientNumber, index)
@@ -310,9 +320,9 @@ func startTestClient(userName, queryParam, contentType, body string, currentClie
 			logError.Printf("[Goroutine %d][Message %d][Get Items Test] Got invalid response. "+
 				"Error Message: %s", currentClientNumber, currentMessageNumber, resultCheck)
 
-			mux.Lock()
+			muxGetItemsErrors.Lock()
 			getItemsErrors = append(getItemsErrors, *resultCheck)
-			mux.Unlock()
+			muxGetItemsErrors.Unlock()
 		} else {
 			logInfo.Printf("[Goroutine %d][Message %d][Get Items Test] Got valid response. "+
 				"Testing buying of received items...", currentClientNumber, currentMessageNumber)
@@ -424,7 +434,7 @@ func main() {
 	//Load Tests with a large number of request from each client
 	//--------------------
 
-	testClientsNum = 16
+	testClientsNum = 4
 	testClientMessagesNum = 500
 
 	logStat.Print("[MAIN] Load tests with a large number of requests from each client has been started")
@@ -451,8 +461,8 @@ func main() {
 }
 
 func resetTestGround() {
-	getItemsRequestTimeSlice = nil
-	buyItemsRequestTimeSlice = nil
+	getItemsResponseTimeSlice = nil
+	buyItemsResponseTimeSlice = nil
 	getItemsErrors = nil
 	buyItemsErrors = nil
 	totalMessagesCount = 0
@@ -466,10 +476,10 @@ func showStat() {
 		len(getItemsErrors), len(buyItemsErrors))
 
 	logStat.Print("Get items responses statistics: ")
-	showTimeSliceStat(getItemsRequestTimeSlice)
+	showTimeSliceStat(getItemsResponseTimeSlice)
 
 	logStat.Print("Buy items responses statistics: ")
-	showTimeSliceStat(buyItemsRequestTimeSlice)
+	showTimeSliceStat(buyItemsResponseTimeSlice)
 }
 
 func showTimeSliceStat(timeSlice []ResponseTime) {
