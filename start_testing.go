@@ -19,13 +19,13 @@ import (
 )
 
 var (
-	logInfoOutfile, _ = os.OpenFile("./logs/Info.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
-	logErrorOutfile, _ = os.OpenFile("./logs/Error.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
-	logStatOutfile, _ = os.OpenFile("./logs/Stat.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+	logInfoOutfile, _  = os.OpenFile("./logs/Info.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	logErrorOutfile, _ = os.OpenFile("./logs/Error.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	logStatOutfile, _  = os.OpenFile("./logs/Stat.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 
-	logInfo = log.New(logInfoOutfile, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	logInfo  = log.New(logInfoOutfile, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 	logError = log.New(logErrorOutfile, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
-	logStat =  log.New(logStatOutfile, "STAT: ", log.Ldate|log.Ltime|log.Lshortfile)
+	logStat  = log.New(logStatOutfile, "STAT: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	testClientsNum        int = 10
 	testClientMessagesNum int = 10
@@ -43,18 +43,23 @@ var (
 
 	myClient *http.Client
 
-	requestClientNames = []string{"", "saneexclamation","buythroated","infuriatedlutchet","ticketbright","insecureloudmouth","soundingindirect","knowledgewives","gearherring","farmershortcrust","variablehertz","ripplinglens","otherscontrol","turnhotsprings","veincelery","excessfamily","iceskatesbale","ruffsescape","pencilelements","yellstable","mushroomslomo","edgecord","possessivegreeting","hertzodds","groaninfected","interiorrotating","firechargeenzyme","sickshower","leukocytedrink","prominencetub","fieldsmustache","woodcocklawful","leatherarmy","achernarinstance","europalepton","planesalami","customersworkbench","infinityhatching","plughumbug","competingfag","farrumscut","perpetualfallen","unwittinglaying","dirtycopernicium","icehockeymeteoroid","merseybeatstarbucks","milkperoxide","flingwater","flagrantcoins","kraftzing","fellsargon","bobstaysloshed","trymercury","freegantonic","barnacleburnt","masonsstrawberry","delayedmale","xiphoidtutor","asheatable","tengmalmshingles","aquilabummage","spotsbiceps","violinanother","tawnysyntax","frogsfeisty","nodulespity","calledpliocene","soddinggluttonous","billowygillette","stuffboson","collarbonelargest","parliamentblizzard","sadmarkings","streetsbailey","surfernissan","democracydividers","alloythine","frugalmust","plancaplay","normalaleutian","stingandalusian","skuaallee","intendedshark","paradigmboards","ventureskeg","kalmansledder","plaindolphin","singermention","employvolta","womenthorough","huhshare","grumpycepheus","magnetremuda","moralsdisrupt","correctfierce","rollmetrics","skeinboiling","amiablebiotic","actmind","baconsiphon","complexvenison"}
+	requestClientNames = []string{"", "saneexclamation", "buythroated", "infuriatedlutchet", "ticketbright", "insecureloudmouth", "soundingindirect", "knowledgewives", "gearherring", "farmershortcrust", "variablehertz", "ripplinglens", "otherscontrol", "turnhotsprings", "veincelery", "excessfamily", "iceskatesbale", "ruffsescape", "pencilelements", "yellstable", "mushroomslomo", "edgecord", "possessivegreeting", "hertzodds", "groaninfected", "interiorrotating", "firechargeenzyme", "sickshower", "leukocytedrink", "prominencetub", "fieldsmustache", "woodcocklawful", "leatherarmy", "achernarinstance", "europalepton", "planesalami", "customersworkbench", "infinityhatching", "plughumbug", "competingfag", "farrumscut", "perpetualfallen", "unwittinglaying", "dirtycopernicium", "icehockeymeteoroid", "merseybeatstarbucks", "milkperoxide", "flingwater", "flagrantcoins", "kraftzing", "fellsargon", "bobstaysloshed", "trymercury", "freegantonic", "barnacleburnt", "masonsstrawberry", "delayedmale", "xiphoidtutor", "asheatable", "tengmalmshingles", "aquilabummage", "spotsbiceps", "violinanother", "tawnysyntax", "frogsfeisty", "nodulespity", "calledpliocene", "soddinggluttonous", "billowygillette", "stuffboson", "collarbonelargest", "parliamentblizzard", "sadmarkings", "streetsbailey", "surfernissan", "democracydividers", "alloythine", "frugalmust", "plancaplay", "normalaleutian", "stingandalusian", "skuaallee", "intendedshark", "paradigmboards", "ventureskeg", "kalmansledder", "plaindolphin", "singermention", "employvolta", "womenthorough", "huhshare", "grumpycepheus", "magnetremuda", "moralsdisrupt", "correctfierce", "rollmetrics", "skeinboiling", "amiablebiotic", "actmind", "baconsiphon", "complexvenison"}
 )
 
 const (
 	serverUrl = "http://185.143.173.31"
 	//serverUrl = "http://localhost:8080"
-	warmUpClientsNum = 100
+	warmUpClientsNum  = 100
 	testMaxClientsNum = 300
 )
 
+type ResponseTime struct {
+	timeWhileSendingRequest time.Time
+	elapsedTime             time.Duration
+}
+
 type ErrResponse struct {
-	time time.Time
+	time    time.Time
 	message string
 }
 
@@ -82,11 +87,6 @@ func Init() {
 	defaultTransport.MaxIdleConnsPerHost = 400000
 
 	myClient = &http.Client{Transport: &defaultTransport}
-}
-
-type ResponseTime struct {
-	timeWhileSendingRequest          time.Time
-	elapsedTime                      time.Duration
 }
 
 type ResponseBody struct {
@@ -150,7 +150,7 @@ func getExpectedBuyItemsResponse(itemName string) string {
 	successPurchaseMessage := "success"
 	failurePurchaseMessage := "failure"
 
-	if len(itemName) % 2 == 0 {
+	if len(itemName)%2 == 0 {
 		responseBody["result"] = successPurchaseMessage
 	} else {
 		responseBody["result"] = failurePurchaseMessage
@@ -160,18 +160,18 @@ func getExpectedBuyItemsResponse(itemName string) string {
 	return string(jsonBody)
 }
 
-func checkResponse(objectName, response string, statusCode int, getExpectedResponse func (objectName string) string) *ErrResponse {
+func checkResponse(objectName, response string, statusCode int, getExpectedResponse func(objectName string) string) *ErrResponse {
 	expectedResponse := getExpectedResponse(objectName)
 
 	if statusCode != 200 {
 		if statusCode == -1 {
-			return &ErrResponse{time : time.Now(), message: "bad response"}
+			return &ErrResponse{time: time.Now(), message: "bad response"}
 		}
-		return &ErrResponse{time : time.Now(), message: "wrong status code"}
+		return &ErrResponse{time: time.Now(), message: "wrong status code"}
 	}
 
 	if response != expectedResponse {
-		return &ErrResponse{time : time.Now(), message: "wrong response body"}
+		return &ErrResponse{time: time.Now(), message: "wrong response body"}
 	}
 
 	return nil
@@ -198,7 +198,7 @@ func sendRequest(resource, queryParams, contentType, body string) (statusCode in
 
 		request, errRequestCreate = http.NewRequest("GET", requestUrl, nil)
 		if errRequestCreate != nil {
-			logError.Printf("[Send Request] Unable to create new request with query params. " +
+			logError.Printf("[Send Request] Unable to create new request with query params. "+
 				"Error: %s", errRequestCreate)
 			return -1, ""
 		}
@@ -212,7 +212,7 @@ func sendRequest(resource, queryParams, contentType, body string) (statusCode in
 
 			request, errRequestCreate = http.NewRequest("POST", requestUrl, strings.NewReader(urlEncodedBody))
 			if errRequestCreate != nil {
-				logError.Printf("[Send Request] Unable to create new request with urlencoded body. " +
+				logError.Printf("[Send Request] Unable to create new request with urlencoded body. "+
 					"Error: %s", errRequestCreate)
 				return -1, ""
 			}
@@ -230,7 +230,7 @@ func sendRequest(resource, queryParams, contentType, body string) (statusCode in
 			request, errRequestCreate = http.NewRequest("POST", requestUrl, multipartBody)
 
 			if errRequestCreate != nil {
-				logError.Printf("[Send Request] Unable to create new request with multipart/form-data body. " +
+				logError.Printf("[Send Request] Unable to create new request with multipart/form-data body. "+
 					"Error: %s", errRequestCreate)
 				return -1, ""
 			}
@@ -277,7 +277,8 @@ func BuyItems(currentClientNumber int, contentType string, items []Item) {
 
 		responseStatusCode, responseBody := sendRequest("/buy", "", contentType, string(requestBody))
 
-		if resultCheck := checkResponse(currentItem.Name, responseBody, responseStatusCode, getExpectedBuyItemsResponse);
+		if resultCheck :=
+			checkResponse(currentItem.Name, responseBody, responseStatusCode, getExpectedBuyItemsResponse);
 			resultCheck != nil {
 
 			logError.Printf("[Goroutine %d][Message %d][Buy Items Test] Got invalid response. "+
@@ -311,11 +312,11 @@ func startTestClient(userName, queryParam, contentType, body string, currentClie
 			getItemsErrors = append(getItemsErrors, *resultCheck)
 			mux.Unlock()
 		} else {
-			logInfo.Printf("[Goroutine %d][Message %d][Get Items Test] Got valid response. " +
+			logInfo.Printf("[Goroutine %d][Message %d][Get Items Test] Got valid response. "+
 				"Testing buying of received items...", currentClientNumber, currentMessageNumber)
 
 			var parsedResponse = ResponseBody{}
-			json.Unmarshal([]byte(responseBody), &parsedResponse )
+			json.Unmarshal([]byte(responseBody), &parsedResponse)
 
 			items := parsedResponse.Items
 
@@ -473,10 +474,10 @@ func showTimeSliceStat(timeSlice []ResponseTime) {
 }
 
 func findTimeMedian(timeSlice []ResponseTime) time.Duration {
-	if len(timeSlice) % 2 != 0 {
-		return timeSlice[(len(timeSlice) + 1) / 2].elapsedTime
+	if len(timeSlice)%2 != 0 {
+		return timeSlice[(len(timeSlice)+1)/2].elapsedTime
 	} else {
-		return (timeSlice[len(timeSlice) / 2].elapsedTime + timeSlice[len(timeSlice) / 2 + 1].elapsedTime) / 2
+		return (timeSlice[len(timeSlice)/2].elapsedTime + timeSlice[len(timeSlice)/2+1].elapsedTime) / 2
 	}
 }
 
