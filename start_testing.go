@@ -42,10 +42,6 @@ var (
 	buyItemsResponseTimeSlice    []ResponseTime
 	muxBuyItemsResponseTimeSlice *sync.Mutex
 
-	mux *sync.Mutex
-
-	requestsClientsNum map[time.Time]uint32
-
 	myClient *http.Client
 
 	requestClientNames = []string{"", "saneexclamation", "buythroated", "infuriatedlutchet", "ticketbright", "insecureloudmouth", "soundingindirect", "knowledgewives", "gearherring", "farmershortcrust", "variablehertz", "ripplinglens", "otherscontrol", "turnhotsprings", "veincelery", "excessfamily", "iceskatesbale", "ruffsescape", "pencilelements", "yellstable", "mushroomslomo", "edgecord", "possessivegreeting", "hertzodds", "groaninfected", "interiorrotating", "firechargeenzyme", "sickshower", "leukocytedrink", "prominencetub", "fieldsmustache", "woodcocklawful", "leatherarmy", "achernarinstance", "europalepton", "planesalami", "customersworkbench", "infinityhatching", "plughumbug", "competingfag", "farrumscut", "perpetualfallen", "unwittinglaying", "dirtycopernicium", "icehockeymeteoroid", "merseybeatstarbucks", "milkperoxide", "flingwater", "flagrantcoins", "kraftzing", "fellsargon", "bobstaysloshed", "trymercury", "freegantonic", "barnacleburnt", "masonsstrawberry", "delayedmale", "xiphoidtutor", "asheatable", "tengmalmshingles", "aquilabummage", "spotsbiceps", "violinanother", "tawnysyntax", "frogsfeisty", "nodulespity", "calledpliocene", "soddinggluttonous", "billowygillette", "stuffboson", "collarbonelargest", "parliamentblizzard", "sadmarkings", "streetsbailey", "surfernissan", "democracydividers", "alloythine", "frugalmust", "plancaplay", "normalaleutian", "stingandalusian", "skuaallee", "intendedshark", "paradigmboards", "ventureskeg", "kalmansledder", "plaindolphin", "singermention", "employvolta", "womenthorough", "huhshare", "grumpycepheus", "magnetremuda", "moralsdisrupt", "correctfierce", "rollmetrics", "skeinboiling", "amiablebiotic", "actmind", "baconsiphon", "complexvenison"}
@@ -85,9 +81,6 @@ func Init() {
 	muxBuyItemsErrors = &sync.Mutex{}
 	muxGetItemsResponseTimeSlice = &sync.Mutex{}
 	muxBuyItemsResponseTimeSlice = &sync.Mutex{}
-	mux = &sync.Mutex{}
-
-	requestsClientsNum = make(map[time.Time]uint32)
 
 	defaultRoundTripper := http.DefaultTransport
 	defaultTransportPointer, _ := defaultRoundTripper.(*http.Transport)
