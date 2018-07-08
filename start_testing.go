@@ -20,9 +20,11 @@ import (
 var (
 	logInfoOutfile, _ = os.OpenFile("./logs/Info.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
 	logErrorOutfile, _ = os.OpenFile("./logs/Error.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+	logStatOutfile, _ = os.OpenFile("./logs/Stat.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
 
 	logInfo = log.New(logInfoOutfile, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 	logError = log.New(logErrorOutfile, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+	logStat =  log.New(logStatOutfile, "STAT: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	testClientsNum        int = 10
 	testClientMessagesNum int = 10
@@ -35,6 +37,7 @@ var (
 	getItemsRequestTimes []GetItemsRequestTime
 	buyItemsRequestTimes []BuyItemsRequestTime
 
+	// TODO: Сделать несколько мутексов для разных слайсов
 	mux *sync.Mutex
 
 	myClient *http.Client
@@ -43,10 +46,10 @@ var (
 )
 
 const (
-	//serverUrl = "http://185.143.173.31"
-	serverUrl = "http://localhost:8080"
+	serverUrl = "http://185.143.173.31"
+	//serverUrl = "http://localhost:8080"
 	warmUpClientsNum = 100
-	testMaxClientsNum = 500
+	testMaxClientsNum = 400
 )
 
 type ErrGetItems struct {
@@ -68,8 +71,6 @@ func (err *ErrBuyItems) Error() string {
 }
 
 func Init() {
-	//http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 50000
-
 	totalMessagesCount = 0
 
 	getItemsErrors = make([]ErrGetItems, 0)
@@ -166,10 +167,6 @@ func getExpectedBuyItemResponseBody(itemName string) string {
 func checkBuyItemResponse(requestedItemName, response string, statusCode int) *ErrBuyItems {
 	expectedResponse := getExpectedBuyItemResponseBody(requestedItemName)
 
-	if statusCode == -1 {
-		return nil
-	}
-
 	if statusCode != 200 {
 		return &ErrBuyItems{time : time.Now(), message: "wrong status code"}
 	}
@@ -183,10 +180,6 @@ func checkBuyItemResponse(requestedItemName, response string, statusCode int) *E
 
 func checkGetItemsResponse(userName, response string, statusCode int) *ErrGetItems {
 	expectedResponse := getExpectedGetItemsResponseBody(userName)
-
-	if statusCode == -1 {
-		return nil
-	}
 
 	if statusCode != 200 {
 		return &ErrGetItems{time : time.Now(), message: "wrong status code"}
@@ -264,12 +257,13 @@ func sendRequest(resource, queryParams, contentType, body string) (statusCode in
 	sendingStartTime = time.Now()
 	response, errResponse = myClient.Do(request)
 	sendingEndTime = time.Now()
-	defer response.Body.Close()
 
 	if errResponse != nil {
 		logError.Printf("[Send Request] Got error response. Error: %s", errResponse)
 		return -1, ""
 	}
+
+	defer response.Body.Close()
 
 	switch resource {
 	case "/", "":
@@ -380,10 +374,9 @@ func main() {
 	defaultRoundTripper := http.DefaultTransport
 	defaultTransportPointer, _ := defaultRoundTripper.(*http.Transport)
 
-	defaultTransport := *defaultTransportPointer // dereference it to get a copy of the struct that the pointer points to
-	defaultTransport.MaxIdleConns = 500000
-	defaultTransport.MaxIdleConnsPerHost = 500000
-	defaultTransport.IdleConnTimeout = 1 * time.Second
+	defaultTransport := *defaultTransportPointer
+	defaultTransport.MaxIdleConns = 400000
+	defaultTransport.MaxIdleConnsPerHost = 400000
 
 	myClient = &http.Client{Transport: &defaultTransport}
 
@@ -409,10 +402,10 @@ func main() {
 
 	wgWarmUp.Wait()
 
-	logInfo.Println("[MAIN] Warm up has been done")
+	logStat.Println("[MAIN] Warm up has been done")
 
 	//--------------------
-	//Load Tests
+	//Load Tests with a large number of clients
 	//--------------------
 
 	wgTest := &sync.WaitGroup{}
@@ -435,15 +428,74 @@ func main() {
 		}
 
 		time.Sleep(5 * time.Second)
-		testClientsNum += 50
-		logInfo.Printf("[MAIN] New clients was added. Current clients count: %d", testClientsNum)
+		testClientsNum += 20
+		logStat.Printf("[MAIN] New clients was added. Current clients count: %d", testClientsNum)
 	}
 
 	wgTest.Wait()
 
 	//--------------------
 
-	logInfo.Printf("[MAIN] All tests has been done. Sended requests count: %d. "+
+	logStat.Printf("[MAIN] Load tests with a large number of clients has been done. Sended requests count: %d. "+
 		"Error statistics: %d errors occured during get items tests, %d errors occured during buy items tests",
 		totalMessagesCount, len(getItemsErrors), len(buyItemsErrors))
+
+	// close all connections before next test
+	logStat.Print("[MAIN Waiting for closing connections...")
+	time.Sleep(defaultTransport.IdleConnTimeout)
+	logStat.Print("[MAIN All connecctions has been closed")
+
+	logStat.Print("[MAIN] Load tests with a large number of clients time statistics: ")
+	showStat()
+
+	//--------------------
+	//Load Tests with a large number of request from each client
+	//--------------------
+
+	getItemsRequestTimes = nil
+	buyItemsRequestTimes = nil
+	getItemsErrors = nil
+	buyItemsErrors = nil
+	totalMessagesCount = 0
+
+	testClientsNum = 4
+	testClientMessagesNum = 500
+
+	for currentClientNumber := 0; currentClientNumber < testClientsNum; currentClientNumber++ {
+		wgTest.Add(1)
+
+		currentClientName := requestClientNames[rand.Intn(len(requestClientNames))]
+
+		queryParams, contentType, requestBody := makeRequestParams(currentClientName)
+
+		go startTestClient(
+			currentClientName, queryParams, contentType, requestBody, currentClientNumber, wgTest)
+	}
+
+	wgTest.Wait()
+
+	//--------------------
+
+	logStat.Print("[MAIN] Load tests with a large number of requests from each client has been done")
+	logStat.Print("[MAIN] Load tests with a large number of requests from each client statistics: ")
+	showStat()
+}
+
+func showStat() {
+	logStat.Printf("Sent requests count: %d. ", totalMessagesCount)
+
+	logStat.Printf("Error statistics: " +
+		"%d errors occurred during get items tests, %d errors occurred during buy items tests",
+		len(getItemsErrors), len(buyItemsErrors))
+
+
+
+
+
+
+
+
+
+
+
 }
