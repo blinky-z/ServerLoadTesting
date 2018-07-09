@@ -27,14 +27,14 @@ var (
 	logError = log.New(logErrorOutfile, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 	logStat  = log.New(logStatOutfile, "STAT: ", log.Ldate|log.Ltime|log.Lshortfile)
 
-	testClientsNum        int = 10
-	testClientMessagesNum int = 10
+	testClientsNum        int
+	testClientMessagesNum int
 
 	totalMessagesCount uint32
 
-	getItemsErrors []ErrResponse
+	getItemsErrors    []ErrResponse
 	muxGetItemsErrors *sync.Mutex
-	buyItemsErrors []ErrResponse
+	buyItemsErrors    []ErrResponse
 	muxBuyItemsErrors *sync.Mutex
 
 	getItemsResponseTimeSlice    []ResponseTime
@@ -48,10 +48,10 @@ var (
 )
 
 const (
-	serverUrl = "http://185.143.173.31"
-	//serverUrl = "http://localhost:8080"
+	//serverUrl = "http://185.143.173.31"
+	serverUrl         = "http://localhost:8080"
 	warmUpClientsNum  = 100
-	testMaxClientsNum = 250
+	testMaxClientsNum = 500
 )
 
 type ResponseTime struct {
@@ -244,6 +244,8 @@ func sendRequest(resource, queryParams, contentType, body string) (statusCode in
 		}
 	}
 
+	request.Close = true
+
 	sendingStartTime = time.Now()
 	response, errResponse = myClient.Do(request)
 	sendingEndTime = time.Now()
@@ -253,7 +255,7 @@ func sendRequest(resource, queryParams, contentType, body string) (statusCode in
 	responseTime.elapsedTime = sendingEndTime.Sub(sendingStartTime)
 
 	if errResponse != nil {
-		logError.Printf("[Send Request] Got error response. Error: %s", errResponse)
+		logError.Printf("[Send Request] Got error response. Error message: %s", errResponse)
 		return -1, ""
 	}
 
@@ -366,6 +368,9 @@ func main() {
 
 	wgWarmUp := &sync.WaitGroup{}
 
+	testClientsNum = 10
+	testClientMessagesNum = 10
+
 	logStat.Print("Warm Up is started")
 
 	for currentClientNumber := 0; currentClientNumber < warmUpClientsNum; currentClientNumber++ {
@@ -390,11 +395,14 @@ func main() {
 
 	wgTest := &sync.WaitGroup{}
 
+	testClientsNum = 10
+	testClientMessagesNum = 10
+
 	logStat.Print("[MAIN] Load tests with a large number of clients has been started")
 
 	for {
 		if testClientsNum > testMaxClientsNum {
-			logInfo.Printf("[MAIN] Reached clients limit. Stopping creating new clients...")
+			logStat.Printf("[MAIN] Reached clients limit. Stopping creating new clients...")
 			break
 		}
 		for currentClientNumber := 0; currentClientNumber < testClientsNum; currentClientNumber++ {
@@ -427,8 +435,8 @@ func main() {
 	//Load Tests with a large number of request from each client
 	//--------------------
 
-	testClientsNum = 4
-	testClientMessagesNum = 500
+	testClientsNum = 8
+	testClientMessagesNum = 1000
 
 	logStat.Print("[MAIN] Load tests with a large number of requests from each client has been started")
 
@@ -479,11 +487,11 @@ func showTimeSliceStat(timeSlice []ResponseTime) {
 	sort.Slice(timeSlice,
 		func(i, j int) bool { return timeSlice[i].elapsedTime < timeSlice[j].elapsedTime })
 
-	averageGetItemsResponseTime := findAverageResponseTime(timeSlice).Seconds()
-	logStat.Printf("Average response time: %f seсonds", averageGetItemsResponseTime)
+	averageGetItemsResponseTime := findAverageResponseTime(timeSlice).Seconds() * 1000
+	logStat.Printf("Average response time: %f ms", averageGetItemsResponseTime)
 
-	getItemsResponseTimeMedian := findTimeMedian(timeSlice).Seconds()
-	logStat.Printf("Response time median: %f seconds", getItemsResponseTimeMedian)
+	getItemsResponseTimeMedian := findTimeMedian(timeSlice).Seconds() * 1000
+	logStat.Printf("Response time median: %f ms", getItemsResponseTimeMedian)
 }
 
 func findTimeMedian(timeSlice []ResponseTime) time.Duration {
