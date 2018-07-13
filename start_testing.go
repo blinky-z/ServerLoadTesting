@@ -500,6 +500,7 @@ func showResponseTimeSliceStat(timeSlice []ResponseTime) {
 
 	showRequestsTimeDependency(timeSlice)
 	showRequestsClientsNumDependency(timeSlice)
+	showResponseTimeClientsNumDependency(timeSlice)
 }
 
 func showRequestsTimeDependency(timeSlice []ResponseTime) {
@@ -535,7 +536,46 @@ func showRequestsTimeDependency(timeSlice []ResponseTime) {
 }
 
 func showResponseTimeClientsNumDependency(timeSlice []ResponseTime) {
+	sort.Slice(timeSlice,
+		func(i, j int) bool { return timeSlice[i].timeWhileSendingRequest.Before(timeSlice[j].timeWhileSendingRequest) })
 
+	averageResponseTimeStat := make(map[int]time.Duration)
+	responseTimeMedianStat := make(map[int]time.Duration)
+
+	intervalStartClientsNum := timeSlice[0].clientsNum
+	for index, currentClientTimeStat := range timeSlice {
+		if currentClientTimeStat.clientsNum != intervalStartClientsNum {
+			currentAverageResponseTime := findAverageResponseTime(timeSlice[:index+1])
+			currentTimeMedian := findTimeMedian(timeSlice[:index+1])
+
+			responseTimeMedianStat[currentClientTimeStat.clientsNum] = currentTimeMedian
+			averageResponseTimeStat[currentClientTimeStat.clientsNum] = currentAverageResponseTime
+
+			intervalStartClientsNum = currentClientTimeStat.clientsNum
+		}
+	}
+	averageResponseTimeStat[timeSlice[len(timeSlice) - 1].clientsNum] = findAverageResponseTime(timeSlice)
+	responseTimeMedianStat[timeSlice[len(timeSlice) - 1].clientsNum] = findTimeMedian(timeSlice)
+
+
+	mapClientsNumKeys := make([]int, 0)
+	for currentClientsNumKey := range averageResponseTimeStat {
+		mapClientsNumKeys = append(mapClientsNumKeys, currentClientsNumKey)
+	}
+	sort.Slice(mapClientsNumKeys,
+		func(i, j int) bool { return mapClientsNumKeys[i] < mapClientsNumKeys[j] })
+
+	logStat.Print("Average response time statistics at a certain number of clients:")
+	for _, currentClientsNum := range mapClientsNumKeys {
+		logStat.Printf("[%d clients] Average response time: %f ms",
+			currentClientsNum, averageResponseTimeStat[currentClientsNum].Seconds()*1000)
+	}
+
+	logStat.Print("Response time median statistics at a certain number of clients:")
+	for _, currentClientsNum := range mapClientsNumKeys {
+		logStat.Printf("[%d clients] Response time median: %f ms",
+			currentClientsNum, responseTimeMedianStat[currentClientsNum].Seconds()*1000)
+	}
 }
 
 func showRequestsClientsNumDependency(timeSlice []ResponseTime) {
