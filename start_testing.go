@@ -488,22 +488,24 @@ func showStat() {
 
 	logStat.Print("General requests statistics:")
 	showResponseTimeSliceStat(allRequestsTimeSlice)
-	// TODO: сделать отображение зависимости времени запроса (медиана, среднее, 95 перцентиль) от кол-ва пользователей
 }
 
 func showResponseTimeSliceStat(timeSlice []ResponseTime) {
-	averageGetItemsResponseTime := findAverageResponseTime(timeSlice).Seconds() * 1000
-	logStat.Printf("Average response time: %f ms", averageGetItemsResponseTime)
+	averageResponseTime := findAverageResponseTime(timeSlice).Seconds() * 1000
+	logStat.Printf("Average response time: %f ms", averageResponseTime)
 
-	getItemsResponseTimeMedian := findTimeMedian(timeSlice).Seconds() * 1000
-	logStat.Printf("Response time median: %f ms", getItemsResponseTimeMedian)
+	responseTimeMedian := findTimeMedian(timeSlice).Seconds() * 1000
+	logStat.Printf("Response time median: %f ms", responseTimeMedian)
 
-	showRequestsTimeDependency(timeSlice)
-	showRequestsClientsNumDependency(timeSlice)
+	timePercentile95Value := findTimePercentile(timeSlice, 95).Seconds() * 1000
+	logStat.Printf("Response time 95th percentile: %f ms", timePercentile95Value)
+
+	showRequestsNumTimeDependency(timeSlice)
+	showRequestsNumClientsNumDependency(timeSlice)
 	showResponseTimeClientsNumDependency(timeSlice)
 }
 
-func showRequestsTimeDependency(timeSlice []ResponseTime) {
+func showRequestsNumTimeDependency(timeSlice []ResponseTime) {
 	sort.Slice(timeSlice,
 		func(i, j int) bool { return timeSlice[i].timeWhileSendingRequest.Before(timeSlice[j].timeWhileSendingRequest) })
 
@@ -535,50 +537,7 @@ func showRequestsTimeDependency(timeSlice []ResponseTime) {
 	}
 }
 
-func showResponseTimeClientsNumDependency(timeSlice []ResponseTime) {
-	sort.Slice(timeSlice,
-		func(i, j int) bool { return timeSlice[i].timeWhileSendingRequest.Before(timeSlice[j].timeWhileSendingRequest) })
-
-	averageResponseTimeStat := make(map[int]time.Duration)
-	responseTimeMedianStat := make(map[int]time.Duration)
-
-	intervalStartClientsNum := timeSlice[0].clientsNum
-	for index, currentClientTimeStat := range timeSlice {
-		if currentClientTimeStat.clientsNum != intervalStartClientsNum {
-			currentAverageResponseTime := findAverageResponseTime(timeSlice[:index+1])
-			currentTimeMedian := findTimeMedian(timeSlice[:index+1])
-
-			responseTimeMedianStat[currentClientTimeStat.clientsNum] = currentTimeMedian
-			averageResponseTimeStat[currentClientTimeStat.clientsNum] = currentAverageResponseTime
-
-			intervalStartClientsNum = currentClientTimeStat.clientsNum
-		}
-	}
-	averageResponseTimeStat[timeSlice[len(timeSlice) - 1].clientsNum] = findAverageResponseTime(timeSlice)
-	responseTimeMedianStat[timeSlice[len(timeSlice) - 1].clientsNum] = findTimeMedian(timeSlice)
-
-
-	mapClientsNumKeys := make([]int, 0)
-	for currentClientsNumKey := range averageResponseTimeStat {
-		mapClientsNumKeys = append(mapClientsNumKeys, currentClientsNumKey)
-	}
-	sort.Slice(mapClientsNumKeys,
-		func(i, j int) bool { return mapClientsNumKeys[i] < mapClientsNumKeys[j] })
-
-	logStat.Print("Average response time statistics at a certain number of clients:")
-	for _, currentClientsNum := range mapClientsNumKeys {
-		logStat.Printf("[%d clients] Average response time: %f ms",
-			currentClientsNum, averageResponseTimeStat[currentClientsNum].Seconds()*1000)
-	}
-
-	logStat.Print("Response time median statistics at a certain number of clients:")
-	for _, currentClientsNum := range mapClientsNumKeys {
-		logStat.Printf("[%d clients] Response time median: %f ms",
-			currentClientsNum, responseTimeMedianStat[currentClientsNum].Seconds()*1000)
-	}
-}
-
-func showRequestsClientsNumDependency(timeSlice []ResponseTime) {
+func showRequestsNumClientsNumDependency(timeSlice []ResponseTime) {
 	sort.Slice(timeSlice,
 		func(i, j int) bool { return timeSlice[i].timeWhileSendingRequest.Before(timeSlice[j].timeWhileSendingRequest) })
 
@@ -606,6 +565,67 @@ func showRequestsClientsNumDependency(timeSlice []ResponseTime) {
 	for _, currentClientsNum := range mapClientsNumKeys {
 		logStat.Printf("[%d clients] %d requests", currentClientsNum, timeClientsRequestsStat[currentClientsNum])
 	}
+}
+
+func showResponseTimeClientsNumDependency(timeSlice []ResponseTime) {
+	sort.Slice(timeSlice,
+		func(i, j int) bool { return timeSlice[i].timeWhileSendingRequest.Before(timeSlice[j].timeWhileSendingRequest) })
+
+	averageResponseTimeStat := make(map[int]time.Duration)
+	responseTimeMedianStat := make(map[int]time.Duration)
+	response95thPercentileStat := make(map[int]time.Duration)
+
+	intervalStartClientsNum := timeSlice[0].clientsNum
+	for index, currentClientTimeStat := range timeSlice {
+		if currentClientTimeStat.clientsNum != intervalStartClientsNum {
+			currentAverageResponseTime := findAverageResponseTime(timeSlice[:index+1])
+			currentTimeMedian := findTimeMedian(timeSlice[:index+1])
+			current95thPercentile := findTimePercentile(timeSlice[:index+1], 95)
+
+			responseTimeMedianStat[currentClientTimeStat.clientsNum] = currentTimeMedian
+			averageResponseTimeStat[currentClientTimeStat.clientsNum] = currentAverageResponseTime
+			response95thPercentileStat[currentClientTimeStat.clientsNum] = current95thPercentile
+
+			intervalStartClientsNum = currentClientTimeStat.clientsNum
+		}
+	}
+	averageResponseTimeStat[timeSlice[len(timeSlice)-1].clientsNum] = findAverageResponseTime(timeSlice)
+	responseTimeMedianStat[timeSlice[len(timeSlice)-1].clientsNum] = findTimeMedian(timeSlice)
+	response95thPercentileStat[timeSlice[len(timeSlice)-1].clientsNum] = findTimePercentile(timeSlice, 95)
+
+	mapClientsNumKeys := make([]int, 0)
+	for currentClientsNumKey := range averageResponseTimeStat {
+		mapClientsNumKeys = append(mapClientsNumKeys, currentClientsNumKey)
+	}
+	sort.Slice(mapClientsNumKeys,
+		func(i, j int) bool { return mapClientsNumKeys[i] < mapClientsNumKeys[j] })
+
+	logStat.Print("Average response time statistics at a certain number of clients:")
+	for _, currentClientsNum := range mapClientsNumKeys {
+		logStat.Printf("[%d clients] Average response time: %f ms",
+			currentClientsNum, averageResponseTimeStat[currentClientsNum].Seconds()*1000)
+	}
+
+	logStat.Print("Response time median statistics at a certain number of clients:")
+	for _, currentClientsNum := range mapClientsNumKeys {
+		logStat.Printf("[%d clients] Response time median: %f ms",
+			currentClientsNum, responseTimeMedianStat[currentClientsNum].Seconds()*1000)
+	}
+
+	logStat.Print("Response time 95th percentile at a certain number of clients:")
+	for _, currentClientsNum := range mapClientsNumKeys {
+		logStat.Printf("[%d clients] Response time 95th percentile: %f ms",
+			currentClientsNum, response95thPercentileStat[currentClientsNum].Seconds()*1000)
+	}
+}
+
+func findTimePercentile(timeSlice []ResponseTime, percentile float32) time.Duration {
+	sort.Slice(timeSlice,
+		func(i, j int) bool { return timeSlice[i].elapsedTime < timeSlice[j].elapsedTime })
+
+	percentileValuePosition := int(percentile/100*float32(len(timeSlice))+0.5) - 1
+
+	return timeSlice[percentileValuePosition].elapsedTime
 }
 
 func findTimeMedian(timeSlice []ResponseTime) time.Duration {
