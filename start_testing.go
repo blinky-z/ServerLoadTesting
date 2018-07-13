@@ -51,10 +51,11 @@ const (
 	//serverUrl = "http://185.143.173.31"
 	serverUrl         = "http://localhost:8080"
 	warmUpClientsNum  = 100
-	testMaxClientsNum = 500
+	testMaxClientsNum = 50
 )
 
 type ResponseTime struct {
+	clientsNum              int
 	timeWhileSendingRequest time.Time
 	elapsedTime             time.Duration
 }
@@ -244,13 +245,12 @@ func sendRequest(resource, queryParams, contentType, body string) (statusCode in
 		}
 	}
 
-	request.Close = true
-
 	sendingStartTime = time.Now()
 	response, errResponse = myClient.Do(request)
 	sendingEndTime = time.Now()
 
 	responseTime := ResponseTime{}
+	responseTime.clientsNum = testClientsNum
 	responseTime.timeWhileSendingRequest = sendingStartTime
 	responseTime.elapsedTime = sendingEndTime.Sub(sendingStartTime)
 
@@ -419,7 +419,7 @@ func main() {
 
 		time.Sleep(5 * time.Second)
 		testClientsNum += 20
-		logStat.Printf("[MAIN] New clients was added. Current clients count: %d", testClientsNum)
+		logStat.Printf("[MAIN] New clients was added. Current clients number: %d", testClientsNum)
 	}
 
 	wgTest.Wait()
@@ -427,7 +427,7 @@ func main() {
 	//--------------------
 
 	logStat.Print("[MAIN] Load tests with a large number of clients has been done")
-	logStat.Print("[MAIN] Load tests with a large number of clients statistics: ")
+	logStat.Print("[MAIN] Load tests with a large number of clients statistics:")
 	showStat()
 
 	resetTestGround()
@@ -457,7 +457,7 @@ func main() {
 	//--------------------
 
 	logStat.Print("[MAIN] Load tests with a large number of requests from each client has been done")
-	logStat.Print("[MAIN] Load tests with a large number of requests from each client statistics: ")
+	logStat.Print("[MAIN] Load tests with a large number of requests from each client statistics:")
 	showStat()
 }
 
@@ -470,31 +470,75 @@ func resetTestGround() {
 }
 
 func showStat() {
-	logStat.Printf("Sent requests count: %d. ", totalMessagesCount)
+	logStat.Printf("Sent requests count: %d", totalMessagesCount)
 
 	logStat.Printf("Error statistics: "+
 		"%d errors occurred during get items tests, %d errors occurred during buy items tests",
 		len(getItemsErrors), len(buyItemsErrors))
 
-	logStat.Print("Get items responses statistics: ")
+	logStat.Print("Get items requests statistics:")
 	showTimeSliceStat(getItemsResponseTimeSlice)
 
-	logStat.Print("Buy items responses statistics: ")
+	logStat.Print("Buy items requests statistics:")
 	showTimeSliceStat(buyItemsResponseTimeSlice)
+
+	var allRequestsTimeSlice []ResponseTime
+	allRequestsTimeSlice = append(allRequestsTimeSlice, getItemsResponseTimeSlice...)
+	allRequestsTimeSlice = append(allRequestsTimeSlice, buyItemsResponseTimeSlice...)
+
+	logStat.Print("General requests statistics:")
+	showTimeSliceStat(allRequestsTimeSlice)
+	// TODO: сделать отображение зависимости кол-во запросов от времени - Done!
+	// TODO: сделать отображение зависимости кол-ва запросов от кол-ва пользователей (+время)
+	// TODO: сделать отображение зависимости времени запроса (медиана, среднее, 95 перцентиль) от кол-ва пользователей
 }
 
 func showTimeSliceStat(timeSlice []ResponseTime) {
-	sort.Slice(timeSlice,
-		func(i, j int) bool { return timeSlice[i].elapsedTime < timeSlice[j].elapsedTime })
-
 	averageGetItemsResponseTime := findAverageResponseTime(timeSlice).Seconds() * 1000
 	logStat.Printf("Average response time: %f ms", averageGetItemsResponseTime)
 
 	getItemsResponseTimeMedian := findTimeMedian(timeSlice).Seconds() * 1000
 	logStat.Printf("Response time median: %f ms", getItemsResponseTimeMedian)
+
+	showRequestsTimeDependency(timeSlice)
+}
+
+func showRequestsTimeDependency(timeSlice []ResponseTime) {
+	sort.Slice(timeSlice,
+		func(i, j int) bool { return timeSlice[i].timeWhileSendingRequest.Before(timeSlice[j].timeWhileSendingRequest) })
+
+	timeClientsRequestsStat := make(map[time.Time]int)
+
+	intervalStartTime := timeSlice[0].timeWhileSendingRequest
+	intervalTimeStep := time.Duration(time.Millisecond)
+	currentIntervalRequestsCount := 0
+	for _, currentClientTimeStat := range timeSlice {
+		if currentClientTimeStat.timeWhileSendingRequest.Sub(intervalStartTime) >= intervalTimeStep {
+			timeClientsRequestsStat[currentClientTimeStat.timeWhileSendingRequest] = currentIntervalRequestsCount
+			intervalStartTime = currentClientTimeStat.timeWhileSendingRequest
+		}
+		currentIntervalRequestsCount++
+	}
+	timeClientsRequestsStat[timeSlice[len(timeSlice)-1].timeWhileSendingRequest] = currentIntervalRequestsCount
+
+	mapTimeKeys := make([]time.Time, 0)
+	for currentTime := range timeClientsRequestsStat {
+		mapTimeKeys = append(mapTimeKeys, currentTime)
+	}
+	sort.Slice(mapTimeKeys,
+		func(i, j int) bool { return mapTimeKeys[i].Before(mapTimeKeys[j]) })
+
+	logStat.Print("Statistics of the number of requests in a certain time:")
+	for _, currentTime := range mapTimeKeys {
+		logStat.Printf("[" + currentTime.Format("15:04:05") + "] " +
+			strconv.Itoa(timeClientsRequestsStat[currentTime]) + " requests")
+	}
 }
 
 func findTimeMedian(timeSlice []ResponseTime) time.Duration {
+	sort.Slice(timeSlice,
+		func(i, j int) bool { return timeSlice[i].elapsedTime < timeSlice[j].elapsedTime })
+
 	if len(timeSlice)%2 != 0 {
 		return timeSlice[(len(timeSlice)+1)/2].elapsedTime
 	} else {
