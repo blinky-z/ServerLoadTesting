@@ -477,23 +477,21 @@ func showStat() {
 		len(getItemsErrors), len(buyItemsErrors))
 
 	logStat.Print("Get items requests statistics:")
-	showTimeSliceStat(getItemsResponseTimeSlice)
+	showResponseTimeSliceStat(getItemsResponseTimeSlice)
 
 	logStat.Print("Buy items requests statistics:")
-	showTimeSliceStat(buyItemsResponseTimeSlice)
+	showResponseTimeSliceStat(buyItemsResponseTimeSlice)
 
 	var allRequestsTimeSlice []ResponseTime
 	allRequestsTimeSlice = append(allRequestsTimeSlice, getItemsResponseTimeSlice...)
 	allRequestsTimeSlice = append(allRequestsTimeSlice, buyItemsResponseTimeSlice...)
 
 	logStat.Print("General requests statistics:")
-	showTimeSliceStat(allRequestsTimeSlice)
-	// TODO: сделать отображение зависимости кол-во запросов от времени - Done!
-	// TODO: сделать отображение зависимости кол-ва запросов от кол-ва пользователей (+время)
+	showResponseTimeSliceStat(allRequestsTimeSlice)
 	// TODO: сделать отображение зависимости времени запроса (медиана, среднее, 95 перцентиль) от кол-ва пользователей
 }
 
-func showTimeSliceStat(timeSlice []ResponseTime) {
+func showResponseTimeSliceStat(timeSlice []ResponseTime) {
 	averageGetItemsResponseTime := findAverageResponseTime(timeSlice).Seconds() * 1000
 	logStat.Printf("Average response time: %f ms", averageGetItemsResponseTime)
 
@@ -501,29 +499,30 @@ func showTimeSliceStat(timeSlice []ResponseTime) {
 	logStat.Printf("Response time median: %f ms", getItemsResponseTimeMedian)
 
 	showRequestsTimeDependency(timeSlice)
+	showRequestsClientsNumDependency(timeSlice)
 }
 
 func showRequestsTimeDependency(timeSlice []ResponseTime) {
 	sort.Slice(timeSlice,
 		func(i, j int) bool { return timeSlice[i].timeWhileSendingRequest.Before(timeSlice[j].timeWhileSendingRequest) })
 
-	timeClientsRequestsStat := make(map[time.Time]int)
+	timeRequestsStat := make(map[time.Time]int)
 
 	intervalStartTime := timeSlice[0].timeWhileSendingRequest
-	intervalTimeStep := time.Duration(time.Millisecond)
-	currentIntervalRequestsCount := 0
+	intervalTimeStep := time.Duration(time.Second)
+	requestsCount := 0
 	for _, currentClientTimeStat := range timeSlice {
 		if currentClientTimeStat.timeWhileSendingRequest.Sub(intervalStartTime) >= intervalTimeStep {
-			timeClientsRequestsStat[currentClientTimeStat.timeWhileSendingRequest] = currentIntervalRequestsCount
+			timeRequestsStat[currentClientTimeStat.timeWhileSendingRequest] = requestsCount
 			intervalStartTime = currentClientTimeStat.timeWhileSendingRequest
 		}
-		currentIntervalRequestsCount++
+		requestsCount++
 	}
-	timeClientsRequestsStat[timeSlice[len(timeSlice)-1].timeWhileSendingRequest] = currentIntervalRequestsCount
+	timeRequestsStat[timeSlice[len(timeSlice)-1].timeWhileSendingRequest] = requestsCount
 
 	mapTimeKeys := make([]time.Time, 0)
-	for currentTime := range timeClientsRequestsStat {
-		mapTimeKeys = append(mapTimeKeys, currentTime)
+	for currentTimeKey := range timeRequestsStat {
+		mapTimeKeys = append(mapTimeKeys, currentTimeKey)
 	}
 	sort.Slice(mapTimeKeys,
 		func(i, j int) bool { return mapTimeKeys[i].Before(mapTimeKeys[j]) })
@@ -531,7 +530,41 @@ func showRequestsTimeDependency(timeSlice []ResponseTime) {
 	logStat.Print("Statistics of the number of requests in a certain time:")
 	for _, currentTime := range mapTimeKeys {
 		logStat.Printf("[" + currentTime.Format("15:04:05") + "] " +
-			strconv.Itoa(timeClientsRequestsStat[currentTime]) + " requests")
+			strconv.Itoa(timeRequestsStat[currentTime]) + " requests")
+	}
+}
+
+func showResponseTimeClientsNumDependency(timeSlice []ResponseTime) {
+
+}
+
+func showRequestsClientsNumDependency(timeSlice []ResponseTime) {
+	sort.Slice(timeSlice,
+		func(i, j int) bool { return timeSlice[i].timeWhileSendingRequest.Before(timeSlice[j].timeWhileSendingRequest) })
+
+	timeClientsRequestsStat := make(map[int]int)
+
+	intervalStartClientsNum := timeSlice[0].clientsNum
+	requestsCount := 0
+	for _, currentClientTimeStat := range timeSlice {
+		if currentClientTimeStat.clientsNum != intervalStartClientsNum {
+			timeClientsRequestsStat[currentClientTimeStat.clientsNum] = requestsCount
+			intervalStartClientsNum = currentClientTimeStat.clientsNum
+		}
+		requestsCount++
+	}
+	timeClientsRequestsStat[timeSlice[len(timeSlice)-1].clientsNum] = requestsCount
+
+	mapClientsNumKeys := make([]int, 0)
+	for currentClientsNumKey := range timeClientsRequestsStat {
+		mapClientsNumKeys = append(mapClientsNumKeys, currentClientsNumKey)
+	}
+	sort.Slice(mapClientsNumKeys,
+		func(i, j int) bool { return mapClientsNumKeys[i] < mapClientsNumKeys[j] })
+
+	logStat.Print("Statistics of the number of requests at a certain number of clients:")
+	for _, currentClientsNum := range mapClientsNumKeys {
+		logStat.Printf("[%d clients] %d requests", currentClientsNum, timeClientsRequestsStat[currentClientsNum])
 	}
 }
 
