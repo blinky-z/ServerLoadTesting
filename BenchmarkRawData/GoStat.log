@@ -1,0 +1,528 @@
+STAT: 2018/07/14 21:15:46 start_testing.go:374: Warm Up is started
+STAT: 2018/07/14 21:15:54 start_testing.go:389: [MAIN] Warm up has been done
+STAT: 2018/07/14 21:15:54 start_testing.go:401: [MAIN] Load tests with a large number of clients has been started
+STAT: 2018/07/14 21:15:59 start_testing.go:421: [MAIN] New clients was added. Current clients number: 20
+STAT: 2018/07/14 21:16:04 start_testing.go:421: [MAIN] New clients was added. Current clients number: 30
+STAT: 2018/07/14 21:16:09 start_testing.go:421: [MAIN] New clients was added. Current clients number: 40
+STAT: 2018/07/14 21:16:14 start_testing.go:421: [MAIN] New clients was added. Current clients number: 50
+STAT: 2018/07/14 21:16:19 start_testing.go:421: [MAIN] New clients was added. Current clients number: 60
+STAT: 2018/07/14 21:16:24 start_testing.go:421: [MAIN] New clients was added. Current clients number: 70
+STAT: 2018/07/14 21:16:29 start_testing.go:421: [MAIN] New clients was added. Current clients number: 80
+STAT: 2018/07/14 21:16:34 start_testing.go:421: [MAIN] New clients was added. Current clients number: 90
+STAT: 2018/07/14 21:16:39 start_testing.go:421: [MAIN] New clients was added. Current clients number: 100
+STAT: 2018/07/14 21:16:44 start_testing.go:421: [MAIN] New clients was added. Current clients number: 110
+STAT: 2018/07/14 21:16:49 start_testing.go:421: [MAIN] New clients was added. Current clients number: 120
+STAT: 2018/07/14 21:16:54 start_testing.go:421: [MAIN] New clients was added. Current clients number: 130
+STAT: 2018/07/14 21:16:59 start_testing.go:421: [MAIN] New clients was added. Current clients number: 140
+STAT: 2018/07/14 21:17:04 start_testing.go:421: [MAIN] New clients was added. Current clients number: 150
+STAT: 2018/07/14 21:17:09 start_testing.go:421: [MAIN] New clients was added. Current clients number: 160
+STAT: 2018/07/14 21:17:14 start_testing.go:421: [MAIN] New clients was added. Current clients number: 170
+STAT: 2018/07/14 21:17:19 start_testing.go:421: [MAIN] New clients was added. Current clients number: 180
+STAT: 2018/07/14 21:17:24 start_testing.go:421: [MAIN] New clients was added. Current clients number: 190
+STAT: 2018/07/14 21:17:29 start_testing.go:421: [MAIN] New clients was added. Current clients number: 200
+STAT: 2018/07/14 21:17:34 start_testing.go:421: [MAIN] New clients was added. Current clients number: 210
+STAT: 2018/07/14 21:17:39 start_testing.go:421: [MAIN] New clients was added. Current clients number: 220
+STAT: 2018/07/14 21:17:44 start_testing.go:421: [MAIN] New clients was added. Current clients number: 230
+STAT: 2018/07/14 21:17:49 start_testing.go:421: [MAIN] New clients was added. Current clients number: 240
+STAT: 2018/07/14 21:17:54 start_testing.go:421: [MAIN] New clients was added. Current clients number: 250
+STAT: 2018/07/14 21:17:59 start_testing.go:421: [MAIN] New clients was added. Current clients number: 260
+STAT: 2018/07/14 21:18:04 start_testing.go:421: [MAIN] New clients was added. Current clients number: 270
+STAT: 2018/07/14 21:18:09 start_testing.go:421: [MAIN] New clients was added. Current clients number: 280
+STAT: 2018/07/14 21:18:14 start_testing.go:421: [MAIN] New clients was added. Current clients number: 290
+STAT: 2018/07/14 21:18:19 start_testing.go:421: [MAIN] New clients was added. Current clients number: 300
+STAT: 2018/07/14 21:18:19 start_testing.go:405: [MAIN] Reached clients limit. Stopping creating new clients...
+STAT: 2018/07/14 21:18:22 start_testing.go:428: [MAIN] Load tests with a large number of clients has been done
+STAT: 2018/07/14 21:18:22 start_testing.go:429: [MAIN] Load tests with a large number of clients statistics:
+STAT: 2018/07/14 21:18:22 start_testing.go:472: Sent requests count: 599310
+STAT: 2018/07/14 21:18:22 start_testing.go:474: Error statistics: 0 errors occurred during get items tests, 0 errors occurred during buy items tests
+STAT: 2018/07/14 21:18:22 start_testing.go:482: General requests statistics:
+STAT: 2018/07/14 21:18:22 start_testing.go:488: Average response time:	3.946145 ms
+STAT: 2018/07/14 21:18:22 start_testing.go:491: Response time median:	1.592826 ms
+STAT: 2018/07/14 21:18:22 start_testing.go:494: Response time 95th percentile:	14.897673 ms
+STAT: 2018/07/14 21:18:23 start_testing.go:526: Statistics of the number of requests in a certain time:
+STAT: 2018/07/14 21:18:23 start_testing.go:527: Time	Number of requests
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:15:55	302
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:15:57	604
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:15:58	906
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:00	1458
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:01	2260
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:02	2760
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:04	3260
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:05	4566
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:07	5622
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:08	6428
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:10	7796
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:11	9726
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:12	10850
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:14	11974
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:15	14470
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:16	16105
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:17	17090
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:18	18209
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:20	20032
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:21	22829
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:22	24056
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:23	25824
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:25	28624
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:26	32285
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:27	33488
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:28	35552
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:30	38737
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:31	43043
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:32	45285
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:34	47527
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:35	52225
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:36	55674
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:37	57030
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:39	59486
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:40	64664
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:42	68614
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:43	71336
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:45	75548
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:46	79209
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:47	82740
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:48	85386
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:49	87210
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:50	92981
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:51	96693
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:52	98805
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:53	101706
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:54	105612
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:55	109796
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:56	113991
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:57	116411
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:58	119226
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:16:59	123558
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:00	127965
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:01	132437
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:02	134975
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:03	138066
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:04	142587
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:05	147370
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:06	152680
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:07	156115
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:08	159208
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:10	164483
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:11	169630
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:12	175146
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:13	177775
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:14	181683
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:15	187552
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:16	194297
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:17	197722
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:18	200391
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:19	204740
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:20	212350
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:21	218054
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:22	222014
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:23	225192
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:24	229408
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:25	237673
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:26	243784
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:27	247384
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:28	250638
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:29	254499
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:30	263506
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:31	270022
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:32	274318
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:33	277698
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:34	281710
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:35	290274
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:36	297920
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:37	302685
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:38	306057
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:39	310853
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:40	320488
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:41	327484
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:42	332402
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:43	336150
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:44	340346
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:45	350813
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:46	358281
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:47	363157
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:48	367052
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:49	371485
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:50	380282
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:51	390030
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:52	395327
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:53	399555
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:54	404434
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:55	412752
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:56	422998
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:57	428653
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:58	432521
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:17:59	437541
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:00	446576
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:01	457511
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:02	463174
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:03	467279
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:04	472495
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:05	481831
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:06	492862
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:07	498571
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:08	502954
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:09	507576
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:10	517086
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:11	528876
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:12	536052
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:13	540928
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:14	547381
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:15	557823
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:16	569512
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:17	575559
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:18	580707
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:19	586401
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:20	592024
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:21	596722
+STAT: 2018/07/14 21:18:23 start_testing.go:529: 21:18:21	599310
+STAT: 2018/07/14 21:18:23 start_testing.go:557: Statistics of the number of requests at a certain number of clients:
+STAT: 2018/07/14 21:18:23 start_testing.go:558: Clients	Number of requests
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 20	1208
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 30	3510
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 40	6974
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 50	12009
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 60	18536
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 70	26751
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 80	36665
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 90	47678
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 100	72810
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 110	72812
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 120	87216
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 130	103377
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 140	121032
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 150	139995
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 160	160247
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 170	181712
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 180	204740
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 190	254185
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 200	254187
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 210	281071
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 220	310187
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 230	340005
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 240	371033
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 250	403888
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 260	471940
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 270	471942
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 280	546415
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 290	546454
+STAT: 2018/07/14 21:18:23 start_testing.go:560: 300	599310
+STAT: 2018/07/14 21:18:26 start_testing.go:597: Average response time statistics at a certain number of clients:
+STAT: 2018/07/14 21:18:26 start_testing.go:598: Clients	Average response time in ms
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 20	0.415285
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 30	0.486503
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 40	0.567097
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 50	0.662045
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 60	1.221378
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 70	1.351774
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 80	1.368513
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 90	1.327313
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 100	1.391378
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 110	1.391357
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 120	1.656882
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 130	1.961038
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 140	2.141809
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 150	2.342554
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 160	2.332272
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 170	2.458455
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 180	2.645914
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 190	2.826658
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 200	2.826840
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 210	2.998118
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 220	3.193569
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 230	3.327767
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 240	3.406530
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 250	3.515975
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 260	3.650045
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 270	3.650036
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 280	3.931455
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 290	3.931192
+STAT: 2018/07/14 21:18:26 start_testing.go:600: 300	3.946145
+STAT: 2018/07/14 21:18:26 start_testing.go:604: Response time median statistics at a certain number of clients:
+STAT: 2018/07/14 21:18:26 start_testing.go:605: Clients	Response time median in ms
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 20	0.258901
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 30	0.266901
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 40	0.292576
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 50	0.309376
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 60	0.409420
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 70	0.455805
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 80	0.452556
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 90	0.440517
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 100	0.450706
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 110	0.450706
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 120	0.476987
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 130	0.561671
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 140	0.609872
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 150	0.662344
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 160	0.686197
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 170	1.592826
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 180	0.830102
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 190	0.932418
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 200	0.932418
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 210	1.013874
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 220	1.083457
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 230	1.152844
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 240	1.226209
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 250	1.274637
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 260	1.393818
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 270	1.393818
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 280	1.559875
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 290	1.559583
+STAT: 2018/07/14 21:18:26 start_testing.go:607: 300	1.610176
+STAT: 2018/07/14 21:18:26 start_testing.go:611: Response time 95th percentile at a certain number of clients:
+STAT: 2018/07/14 21:18:26 start_testing.go:612: Clients	Response time 95th percentile in ms
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 20	1.142798
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 30	1.674003
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 40	2.077590
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 50	2.515255
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 60	5.254348
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 70	5.758330
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 80	5.707672
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 90	5.470476
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 100	5.765166
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 110	5.765166
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 120	7.406611
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 130	8.470301
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 140	9.169280
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 150	10.189900
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 160	9.881267
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 170	14.897673
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 180	10.992998
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 190	11.497521
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 200	11.497650
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 210	11.966610
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 220	12.697648
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 230	13.098015
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 240	13.222103
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 250	13.620592
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 260	13.946449
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 270	13.946449
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 280	14.985340
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 290	14.985114
+STAT: 2018/07/14 21:18:26 start_testing.go:614: 300	14.988583
+STAT: 2018/07/14 21:18:26 start_testing.go:440: [MAIN] Load tests with a large number of requests from each client has been started
+STAT: 2018/07/14 21:21:55 start_testing.go:458: [MAIN] Load tests with a large number of requests from each client has been done
+STAT: 2018/07/14 21:21:55 start_testing.go:459: [MAIN] Load tests with a large number of requests from each client statistics:
+STAT: 2018/07/14 21:21:55 start_testing.go:472: Sent requests count: 61000
+STAT: 2018/07/14 21:21:55 start_testing.go:474: Error statistics: 0 errors occurred during get items tests, 0 errors occurred during buy items tests
+STAT: 2018/07/14 21:21:55 start_testing.go:482: General requests statistics:
+STAT: 2018/07/14 21:21:55 start_testing.go:488: Average response time:	0.359681 ms
+STAT: 2018/07/14 21:21:55 start_testing.go:491: Response time median:	0.339070 ms
+STAT: 2018/07/14 21:21:55 start_testing.go:494: Response time 95th percentile:	0.624393 ms
+STAT: 2018/07/14 21:21:55 start_testing.go:526: Statistics of the number of requests in a certain time:
+STAT: 2018/07/14 21:21:55 start_testing.go:527: Time	Number of requests
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:27	305
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:28	610
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:29	915
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:30	1220
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:31	1525
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:32	1830
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:33	2135
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:34	2440
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:35	2745
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:36	3050
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:37	3355
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:38	3660
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:39	3965
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:40	4270
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:41	4553
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:42	4833
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:43	5135
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:44	5440
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:45	5745
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:46	6050
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:47	6355
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:48	6660
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:49	6965
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:50	7270
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:52	7575
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:53	7865
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:54	8151
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:55	8456
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:56	8761
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:57	9066
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:58	9371
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:18:59	9676
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:00	9981
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:01	10286
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:02	10591
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:03	10896
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:04	11175
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:05	11456
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:06	11761
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:07	12066
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:08	12371
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:09	12676
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:10	12981
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:11	13286
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:12	13591
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:13	13896
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:14	14201
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:15	14506
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:16	14811
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:17	15116
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:18	15387
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:19	15692
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:20	15997
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:21	16302
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:22	16607
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:23	16912
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:24	17217
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:25	17522
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:26	17827
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:27	18132
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:28	18427
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:29	18692
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:30	18997
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:31	19302
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:33	19607
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:34	19912
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:35	20217
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:36	20522
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:37	20827
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:38	21132
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:39	21437
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:40	21742
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:41	22047
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:42	22343
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:43	22623
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:44	22928
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:45	23233
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:46	23538
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:47	23843
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:48	24148
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:49	24453
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:50	24758
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:51	25063
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:52	25368
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:53	25673
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:54	25978
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:55	26283
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:56	26579
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:57	26877
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:58	27169
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:19:59	27453
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:00	27758
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:01	28063
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:02	28368
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:03	28673
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:04	28978
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:05	29283
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:06	29588
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:07	29893
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:08	30198
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:09	30503
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:10	30763
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:11	31063
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:12	31368
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:13	31673
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:14	31978
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:15	32283
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:17	32588
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:18	32893
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:19	33198
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:20	33503
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:21	33808
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:22	34079
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:23	34384
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:24	34689
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:25	34994
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:26	35299
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:27	35604
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:28	35909
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:29	36214
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:30	36511
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:31	36808
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:32	37113
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:33	37418
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:34	37702
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:35	37994
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:36	38299
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:37	38604
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:38	38909
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:39	39214
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:40	39519
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:41	39824
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:42	40129
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:43	40434
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:44	40705
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:45	40994
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:46	41299
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:47	41604
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:48	41909
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:49	42214
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:50	42519
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:51	42824
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:52	43129
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:54	43434
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:55	43739
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:56	44017
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:57	44315
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:58	44620
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:20:59	44925
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:00	45230
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:01	45535
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:02	45840
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:03	46145
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:04	46450
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:05	46755
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:06	47026
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:07	47315
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:08	47620
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:09	47925
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:10	48230
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:11	48535
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:12	48840
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:13	49145
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:14	49450
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:15	49755
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:16	50060
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:17	50365
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:18	50670
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:19	50941
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:20	51246
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:21	51551
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:22	51856
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:23	52161
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:24	52466
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:25	52771
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:26	53076
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:27	53381
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:28	53685
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:29	53941
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:30	54246
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:32	54551
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:33	54856
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:34	55161
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:35	55466
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:36	55771
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:37	56076
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:38	56381
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:39	56686
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:40	56991
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:41	57296
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:42	57601
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:43	57872
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:44	58177
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:45	58482
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:46	58787
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:47	59076
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:48	59381
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:49	59686
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:50	59991
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:51	60296
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:52	60546
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:53	60796
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:54	60966
+STAT: 2018/07/14 21:21:55 start_testing.go:529: 21:21:54	61000
+STAT: 2018/07/14 21:21:55 start_testing.go:557: Statistics of the number of requests at a certain number of clients:
+STAT: 2018/07/14 21:21:55 start_testing.go:558: Clients	Number of requests
+STAT: 2018/07/14 21:21:55 start_testing.go:560: 4	61000
+STAT: 2018/07/14 21:21:55 start_testing.go:597: Average response time statistics at a certain number of clients:
+STAT: 2018/07/14 21:21:55 start_testing.go:598: Clients	Average response time in ms
+STAT: 2018/07/14 21:21:55 start_testing.go:600: 4	0.359681
+STAT: 2018/07/14 21:21:55 start_testing.go:604: Response time median statistics at a certain number of clients:
+STAT: 2018/07/14 21:21:55 start_testing.go:605: Clients	Response time median in ms
+STAT: 2018/07/14 21:21:55 start_testing.go:607: 4	0.339070
+STAT: 2018/07/14 21:21:55 start_testing.go:611: Response time 95th percentile at a certain number of clients:
+STAT: 2018/07/14 21:21:55 start_testing.go:612: Clients	Response time 95th percentile in ms
+STAT: 2018/07/14 21:21:55 start_testing.go:614: 4	0.624393
