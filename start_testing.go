@@ -532,8 +532,8 @@ func showRequestsNumTimeDependency(timeSlice []ResponseTime) {
 
 	logStat.Print("Statistics of the number of requests in a certain time:")
 	for _, currentTime := range mapTimeKeys {
-		logStat.Printf("[" + currentTime.Format("15:04:05") + "] " +
-			strconv.Itoa(timeRequestsStat[currentTime]) + " requests")
+		logStat.Print("[" + currentTime.Format("15:04:05") + "] " +
+			strconv.Itoa(timeRequestsStat[currentTime]))
 	}
 }
 
@@ -563,7 +563,7 @@ func showRequestsNumClientsNumDependency(timeSlice []ResponseTime) {
 
 	logStat.Print("Statistics of the number of requests at a certain number of clients:")
 	for _, currentClientsNum := range mapClientsNumKeys {
-		logStat.Printf("[%d clients] %d requests", currentClientsNum, timeClientsRequestsStat[currentClientsNum])
+		logStat.Printf("[%d clients] %d", currentClientsNum, timeClientsRequestsStat[currentClientsNum])
 	}
 }
 
@@ -602,19 +602,19 @@ func showResponseTimeClientsNumDependency(timeSlice []ResponseTime) {
 
 	logStat.Print("Average response time statistics at a certain number of clients:")
 	for _, currentClientsNum := range mapClientsNumKeys {
-		logStat.Printf("[%d clients] Average response time: %f ms",
+		logStat.Printf("[%d clients] %f ms",
 			currentClientsNum, averageResponseTimeStat[currentClientsNum].Seconds()*1000)
 	}
 
 	logStat.Print("Response time median statistics at a certain number of clients:")
 	for _, currentClientsNum := range mapClientsNumKeys {
-		logStat.Printf("[%d clients] Response time median: %f ms",
+		logStat.Printf("[%d clients] %f ms",
 			currentClientsNum, responseTimeMedianStat[currentClientsNum].Seconds()*1000)
 	}
 
 	logStat.Print("Response time 95th percentile at a certain number of clients:")
 	for _, currentClientsNum := range mapClientsNumKeys {
-		logStat.Printf("[%d clients] Response time 95th percentile: %f ms",
+		logStat.Printf("[%d clients] %f ms",
 			currentClientsNum, response95thPercentileStat[currentClientsNum].Seconds()*1000)
 	}
 }
