@@ -27,8 +27,8 @@ var (
 	logError = log.New(logErrorOutfile, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 	logStat  = log.New(logStatOutfile, "STAT: ", log.Ldate|log.Ltime|log.Lshortfile)
 
-	testClientsNum        int
-	testClientMessagesNum int
+	testClientsNum             int
+	testClientMessagesNum      int
 
 	totalMessagesCount uint32
 
@@ -51,7 +51,7 @@ const (
 	//serverUrl = "http://185.143.173.31"
 	serverUrl         = "http://localhost:8080"
 	warmUpClientsNum  = 100
-	testMaxClientsNum = 50
+	testMaxClientsNum = 300
 )
 
 type ResponseTime struct {
@@ -401,7 +401,7 @@ func main() {
 	logStat.Print("[MAIN] Load tests with a large number of clients has been started")
 
 	for {
-		if testClientsNum > testMaxClientsNum {
+		if testClientsNum >= testMaxClientsNum {
 			logStat.Printf("[MAIN] Reached clients limit. Stopping creating new clients...")
 			break
 		}
@@ -416,9 +416,8 @@ func main() {
 			go startTestClient(
 				currentClientName, queryParams, contentType, requestBody, currentClientNumber, wgTest, sendDelay)
 		}
-
 		time.Sleep(5 * time.Second)
-		testClientsNum += 20
+		testClientsNum += 10
 		logStat.Printf("[MAIN] New clients was added. Current clients number: %d", testClientsNum)
 	}
 
@@ -435,7 +434,7 @@ func main() {
 	//Load Tests with a large number of request from each client
 	//--------------------
 
-	testClientsNum = 8
+	testClientsNum = 4
 	testClientMessagesNum = 1000
 
 	logStat.Print("[MAIN] Load tests with a large number of requests from each client has been started")
@@ -492,13 +491,13 @@ func showStat() {
 
 func showResponseTimeSliceStat(timeSlice []ResponseTime) {
 	averageResponseTime := findAverageResponseTime(timeSlice).Seconds() * 1000
-	logStat.Printf("Average response time: %f ms", averageResponseTime)
+	logStat.Printf("Average response time:	%f ms", averageResponseTime)
 
 	responseTimeMedian := findTimeMedian(timeSlice).Seconds() * 1000
-	logStat.Printf("Response time median: %f ms", responseTimeMedian)
+	logStat.Printf("Response time median:		%f ms", responseTimeMedian)
 
 	timePercentile95Value := findTimePercentile(timeSlice, 95).Seconds() * 1000
-	logStat.Printf("Response time 95th percentile: %f ms", timePercentile95Value)
+	logStat.Printf("Response time 95th percentile:	%f ms", timePercentile95Value)
 
 	showRequestsNumTimeDependency(timeSlice)
 	showRequestsNumClientsNumDependency(timeSlice)
@@ -509,31 +508,31 @@ func showRequestsNumTimeDependency(timeSlice []ResponseTime) {
 	sort.Slice(timeSlice,
 		func(i, j int) bool { return timeSlice[i].timeWhileSendingRequest.Before(timeSlice[j].timeWhileSendingRequest) })
 
-	timeRequestsStat := make(map[time.Time]int)
+	timeRequestsNumStat := make(map[time.Time]int)
 
 	intervalStartTime := timeSlice[0].timeWhileSendingRequest
 	intervalTimeStep := time.Duration(time.Second)
 	requestsCount := 0
 	for _, currentClientTimeStat := range timeSlice {
 		if currentClientTimeStat.timeWhileSendingRequest.Sub(intervalStartTime) >= intervalTimeStep {
-			timeRequestsStat[currentClientTimeStat.timeWhileSendingRequest] = requestsCount
+			timeRequestsNumStat[currentClientTimeStat.timeWhileSendingRequest] = requestsCount
 			intervalStartTime = currentClientTimeStat.timeWhileSendingRequest
 		}
 		requestsCount++
 	}
-	timeRequestsStat[timeSlice[len(timeSlice)-1].timeWhileSendingRequest] = requestsCount
+	timeRequestsNumStat[timeSlice[len(timeSlice)-1].timeWhileSendingRequest] = requestsCount
 
 	mapTimeKeys := make([]time.Time, 0)
-	for currentTimeKey := range timeRequestsStat {
+	for currentTimeKey := range timeRequestsNumStat {
 		mapTimeKeys = append(mapTimeKeys, currentTimeKey)
 	}
 	sort.Slice(mapTimeKeys,
 		func(i, j int) bool { return mapTimeKeys[i].Before(mapTimeKeys[j]) })
 
 	logStat.Print("Statistics of the number of requests in a certain time:")
+	logStat.Print("Time	Number of requests")
 	for _, currentTime := range mapTimeKeys {
-		logStat.Print("[" + currentTime.Format("15:04:05") + "] " +
-			strconv.Itoa(timeRequestsStat[currentTime]))
+		logStat.Print(currentTime.Format("15:04:05") + "	" + strconv.Itoa(timeRequestsNumStat[currentTime]))
 	}
 }
 
@@ -562,8 +561,9 @@ func showRequestsNumClientsNumDependency(timeSlice []ResponseTime) {
 		func(i, j int) bool { return mapClientsNumKeys[i] < mapClientsNumKeys[j] })
 
 	logStat.Print("Statistics of the number of requests at a certain number of clients:")
+	logStat.Print("Clients	Number of requests")
 	for _, currentClientsNum := range mapClientsNumKeys {
-		logStat.Printf("[%d clients] %d", currentClientsNum, timeClientsRequestsStat[currentClientsNum])
+		logStat.Printf("%d	%d", currentClientsNum, timeClientsRequestsStat[currentClientsNum])
 	}
 }
 
@@ -601,20 +601,23 @@ func showResponseTimeClientsNumDependency(timeSlice []ResponseTime) {
 		func(i, j int) bool { return mapClientsNumKeys[i] < mapClientsNumKeys[j] })
 
 	logStat.Print("Average response time statistics at a certain number of clients:")
+	logStat.Print("Clients	Average response time in ms")
 	for _, currentClientsNum := range mapClientsNumKeys {
-		logStat.Printf("[%d clients] %f ms",
+		logStat.Printf("%d	%f",
 			currentClientsNum, averageResponseTimeStat[currentClientsNum].Seconds()*1000)
 	}
 
 	logStat.Print("Response time median statistics at a certain number of clients:")
+	logStat.Print("Clients	Response time median in ms")
 	for _, currentClientsNum := range mapClientsNumKeys {
-		logStat.Printf("[%d clients] %f ms",
+		logStat.Printf("%d	%f",
 			currentClientsNum, responseTimeMedianStat[currentClientsNum].Seconds()*1000)
 	}
 
 	logStat.Print("Response time 95th percentile at a certain number of clients:")
+	logStat.Print("Clients	Response time 95th percentile in ms")
 	for _, currentClientsNum := range mapClientsNumKeys {
-		logStat.Printf("[%d clients] %f ms",
+		logStat.Printf("%d	%f",
 			currentClientsNum, response95thPercentileStat[currentClientsNum].Seconds()*1000)
 	}
 }
