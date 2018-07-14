@@ -475,12 +475,6 @@ func showStat() {
 		"%d errors occurred during get items tests, %d errors occurred during buy items tests",
 		len(getItemsErrors), len(buyItemsErrors))
 
-	logStat.Print("Get items requests statistics:")
-	showResponseTimeSliceStat(getItemsResponseTimeSlice)
-
-	logStat.Print("Buy items requests statistics:")
-	showResponseTimeSliceStat(buyItemsResponseTimeSlice)
-
 	var allRequestsTimeSlice []ResponseTime
 	allRequestsTimeSlice = append(allRequestsTimeSlice, getItemsResponseTimeSlice...)
 	allRequestsTimeSlice = append(allRequestsTimeSlice, buyItemsResponseTimeSlice...)
@@ -494,7 +488,7 @@ func showResponseTimeSliceStat(timeSlice []ResponseTime) {
 	logStat.Printf("Average response time:	%f ms", averageResponseTime)
 
 	responseTimeMedian := findTimeMedian(timeSlice).Seconds() * 1000
-	logStat.Printf("Response time median:		%f ms", responseTimeMedian)
+	logStat.Printf("Response time median:	%f ms", responseTimeMedian)
 
 	timePercentile95Value := findTimePercentile(timeSlice, 95).Seconds() * 1000
 	logStat.Printf("Response time 95th percentile:	%f ms", timePercentile95Value)
