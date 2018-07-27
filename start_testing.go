@@ -1,21 +1,21 @@
 package main
 
 import (
-	"sync"
-	"net/http"
-	"strconv"
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
-	"time"
 	"log"
-	"os"
-	"bytes"
-	"mime/multipart"
-	"sync/atomic"
-	"net/url"
 	"math/rand"
-	"strings"
+	"mime/multipart"
+	"net/http"
+	"net/url"
+	"os"
 	"sort"
+	"strconv"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
 )
 
 var (
@@ -23,12 +23,12 @@ var (
 	logErrorOutfile, _ = os.OpenFile("./logs/Error.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	logStatOutfile, _  = os.OpenFile("./logs/Stat.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 
-	logInfo  = log.New(logInfoOutfile, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
-	logError = log.New(logErrorOutfile, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
-	logStat  = log.New(logStatOutfile, "STAT: ", log.Ldate|log.Ltime|log.Lshortfile)
+	logInfo  = log.New(logInfoOutfile, "INFO: ", log.Ltime)
+	logError = log.New(logErrorOutfile, "ERROR: ", log.Ltime)
+	logStat  = log.New(logStatOutfile, "STAT: ", log.Ltime)
 
-	testClientsNum             int
-	testClientMessagesNum      int
+	testClientsNum        int
+	testClientMessagesNum int
 
 	totalMessagesCount uint32
 
@@ -173,11 +173,12 @@ func checkResponse(
 		if statusCode == -1 {
 			return &ErrResponse{time: time.Now(), message: "bad response"}
 		}
-		return &ErrResponse{time: time.Now(), message: "wrong status code"}
+		return &ErrResponse{time: time.Now(), message: "wrong status code: " + strconv.Itoa(statusCode)}
 	}
 
 	if response != expectedResponse {
-		return &ErrResponse{time: time.Now(), message: "wrong response body"}
+		return &ErrResponse{time: time.Now(), message: "wrong response body: " + response +
+			" | Expected: " + expectedResponse}
 	}
 
 	return nil
@@ -285,8 +286,7 @@ func BuyItems(currentClientNumber int, contentType string, items []Item) {
 		responseStatusCode, responseBody := sendRequest("/buy", "", contentType, string(requestBody))
 
 		if resultCheck :=
-			checkResponse(currentItem.Name, responseBody, responseStatusCode, getExpectedBuyItemsResponse);
-			resultCheck != nil {
+			checkResponse(currentItem.Name, responseBody, responseStatusCode, getExpectedBuyItemsResponse); resultCheck != nil {
 
 			logError.Printf("[Goroutine %d][Message %d][Buy Items Test] Got invalid response. "+
 				"Error Message: %s", currentClientNumber, index, resultCheck)
@@ -309,8 +309,7 @@ func startTestClient(userName, queryParam, contentType, body string, currentClie
 
 		atomic.AddUint32(&totalMessagesCount, 1)
 
-		if resultCheck := checkResponse(userName, responseBody, responseStatusCode, getExpectedGetItemsResponse);
-			resultCheck != nil {
+		if resultCheck := checkResponse(userName, responseBody, responseStatusCode, getExpectedGetItemsResponse); resultCheck != nil {
 
 			logError.Printf("[Goroutine %d][Message %d][Get Items Test] Got invalid response. "+
 				"Error Message: %s", currentClientNumber, currentMessageNumber, resultCheck)
@@ -371,7 +370,7 @@ func main() {
 	testClientsNum = 10
 	testClientMessagesNum = 10
 
-	logStat.Print("Warm Up is started")
+	logStat.Print("Warm Up has started")
 
 	for currentClientNumber := 0; currentClientNumber < warmUpClientsNum; currentClientNumber++ {
 		wgWarmUp.Add(1)
@@ -386,7 +385,7 @@ func main() {
 	}
 	wgWarmUp.Wait()
 
-	logStat.Print("[MAIN] Warm up has been done")
+	logStat.Print("[MAIN] Warm up is done")
 
 	resetTestGround()
 	//--------------------
@@ -500,7 +499,9 @@ func showResponseTimeSliceStat(timeSlice []ResponseTime) {
 
 func showRequestsNumTimeDependency(timeSlice []ResponseTime) {
 	sort.Slice(timeSlice,
-		func(i, j int) bool { return timeSlice[i].timeWhileSendingRequest.Before(timeSlice[j].timeWhileSendingRequest) })
+		func(i, j int) bool {
+			return timeSlice[i].timeWhileSendingRequest.Before(timeSlice[j].timeWhileSendingRequest)
+		})
 
 	timeRequestsNumStat := make(map[time.Time]int)
 
@@ -532,7 +533,9 @@ func showRequestsNumTimeDependency(timeSlice []ResponseTime) {
 
 func showRequestsNumClientsNumDependency(timeSlice []ResponseTime) {
 	sort.Slice(timeSlice,
-		func(i, j int) bool { return timeSlice[i].timeWhileSendingRequest.Before(timeSlice[j].timeWhileSendingRequest) })
+		func(i, j int) bool {
+			return timeSlice[i].timeWhileSendingRequest.Before(timeSlice[j].timeWhileSendingRequest)
+		})
 
 	timeClientsRequestsStat := make(map[int]int)
 
@@ -563,7 +566,9 @@ func showRequestsNumClientsNumDependency(timeSlice []ResponseTime) {
 
 func showResponseTimeClientsNumDependency(timeSlice []ResponseTime) {
 	sort.Slice(timeSlice,
-		func(i, j int) bool { return timeSlice[i].timeWhileSendingRequest.Before(timeSlice[j].timeWhileSendingRequest) })
+		func(i, j int) bool {
+			return timeSlice[i].timeWhileSendingRequest.Before(timeSlice[j].timeWhileSendingRequest)
+		})
 
 	averageResponseTimeStat := make(map[int]time.Duration)
 	responseTimeMedianStat := make(map[int]time.Duration)
